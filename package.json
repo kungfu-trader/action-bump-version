@@ -1,0 +1,21 @@
+{
+  "name": "@kungfu-trader/action-update-version",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "repository": "https://github.com/kungfu-trader/action-update-version",
+  "author": "Keren Dong",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "ncc build index.js"
+  },
+  "dependencies": {
+    "@actions/core": "^1.2.6",
+    "@actions/github": "^4.0.0",
+    "glob": "^7.1.6",
+    "semver": "^7.3.4",
+    "yargs": "^16.2.0"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.27.0"
+  }
+}

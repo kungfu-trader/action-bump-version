@@ -1,0 +1,10 @@
+name: "Update Version"
+author: "Keren Dong"
+description: "Update project version"
+inputs:
+  version-part:
+    description: "Which part (of a semantic version) to update [major|minor|patch|prerelease]"
+    required: true
+runs:
+  using: "node12"
+  main: "dist/index.js"
