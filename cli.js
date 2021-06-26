@@ -7,6 +7,6 @@ const argv = require("yargs/yargs")(process.argv.slice(2))
     .help()
     .argv;
 
-const { updatePackagesVersion } = require("./lib.js");
+const { bumpVersion } = require("./lib.js");
 
-updatePackagesVersion(argv.versionPart);
+bumpVersion(argv.versionPart);

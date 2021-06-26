@@ -7,6 +7,16 @@ const { spawn, spawnSync } = require("child_process");
 const spawnOptsInherit = { shell: true, stdio: "inherit", windowsHide: true };
 const spawnOptsPipe = { shell: true, stdio: "pipe", windowsHide: true };
 
-exports.updatePackagesVersion = function (versionPart) {
-  console.log(`updateing ${versionPart}`);
+function getPackageJson(cwd = process.cwd()) {
+  const packageJsonPath = path.join(cwd, "package.json");
+  if (!fs.existsSync(packageJsonPath)) {
+    console.log("package.json not found");
+    return;
+  }
+  return JSON.parse(fs.readFileSync(packageJsonPath));
+}
+
+exports.bumpVersion = function (versionPart) {
+  const packageJson = getPackageJson();
+  console.log(`updateing ${versionPart}: ${packageJson.version}`);
 };
