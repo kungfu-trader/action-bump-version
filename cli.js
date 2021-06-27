@@ -1,12 +1,12 @@
 const argv = require("yargs/yargs")(process.argv.slice(2))
-    .option("version-part", {
-        description: "version part to update", type: "string",
-        choices: ["major", "minor", "patch", "prerelease"]
+    .option("bump-keyword", {
+        description: "Increment version(s) by semver keyword", type: "string",
+        choices: ["major", "minor", "patch", "premajor", "preminor", "prepatch", "prerelease"]
     })
-    .demandOption(["version-part"])
+    .demandOption(["bump-keyword"])
     .help()
     .argv;
 
 const lib = require("./lib.js");
 
-lib.bumpVersion(argv.versionPart);
+lib.bumpVersion(argv.bumpKeyword);

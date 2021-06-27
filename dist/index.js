@@ -11,8 +11,8 @@ const lib = __nccwpck_require__(2909);
 
 try {
     const context = github.context;
-    const versionPart = core.getInput('version-part');
-    lib.bumpVersion(versionPart);
+    const bumpKeyword = core.getInput('bump-keyword');
+    lib.bumpVersion(bumpKeyword);
 } catch (error) {
     core.setFailed(error.message);
 }
@@ -50,27 +50,31 @@ function getCurrentVersion(cwd = process.cwd()) {
   return semver.parse(config.version);
 }
 
-async function bumpToNext(cwd = process.cwd(), next = "patch") {
-  const currentVersion = getCurrentVersion();
-  const nextVersion = currentVersion.inc(next);
-  const versionBranch = `dev/v${nextVersion.major}/v${nextVersion.minor}`;
-  await git('switch', '-c', versionBranch);
+function bump(cwd = process.cwd()) {
   if (hasLerna(cwd)) {
-    spawnSync("lerna", ["version", `pre${next}`], spawnOptsInherit);
+    spawnSync("lerna", ["version", `pre${next}`, "--yes", "--no-git-tag-version", "--no-push"], spawnOptsInherit);
   } else {
     spawnSync("yarn", ["version", `pre${next}`], spawnOptsInherit);
   }
 }
 
+async function bumpToNext(cwd = process.cwd(), next = "minor") {
+  const currentVersion = getCurrentVersion();
+  console.log(`increment ${next}: ${currentVersion}`);
+  const nextVersion = currentVersion.inc(next);
+  const versionBranch = `dev/v${nextVersion.major}/v${nextVersion.major}.${nextVersion.minor}`;
+  await git("switch", "-c", versionBranch);
+  bump(cwd);
+}
+
 const actions = {
-  "minor": async (cwd = process.cwd()) => bumpToNext(cwd)
+  "major": async (cwd = process.cwd()) => bumpToNext(cwd, "major"),
+  "minor": async (cwd = process.cwd()) => bumpToNext(cwd, "minor"),
+  "patch": (cwd = process.cwd()) => bump(cwd)
 };
 
-exports.bumpVersion = async function (versionPart) {
-  const packageJson = getPackageJson();
-  console.log(`updateing ${versionPart}: ${packageJson.version}`);
-  const hash = await git('rev-parse', { verify: true, short: 6 }, 'HEAD');
-  console.log(`git head ${hash}`);
+exports.bumpVersion = async function (bumpKeyword) {
+  actions[bumpKeyword]();
 };
 
 /***/ }),

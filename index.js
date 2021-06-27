@@ -4,8 +4,8 @@ const lib = require("./lib.js");
 
 try {
     const context = github.context;
-    const versionPart = core.getInput('version-part');
-    lib.bumpVersion(versionPart);
+    const bumpKeyword = core.getInput('bump-keyword');
+    lib.bumpVersion(bumpKeyword);
 } catch (error) {
     core.setFailed(error.message);
 }
