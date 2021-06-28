@@ -48,10 +48,14 @@ async function bump(cwd, keyword) {
 }
 
 async function prepareNewBranch(cwd, keyword) {
+  console.log(`Bump keyword: ${keyword}`);
+
   const currentVersion = getCurrentVersion(cwd);
-  console.log(`increment ${keyword}: ${currentVersion}`);
+  console.log(`Current version: ${currentVersion}`);
+
   const nextVersion = currentVersion.inc(keyword);
   const versionBranch = `dev/v${nextVersion.major}/v${nextVersion.major}.${nextVersion.minor}`;
+
   await git("switch", "-c", versionBranch);
   await git("push", "-u", "origin", versionBranch);
 }
