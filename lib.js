@@ -30,44 +30,34 @@ async function gitCall(...args) {
   await git(...args);
 }
 
-async function bump(cwd, keyword) {
+async function bump(cwd, keyword, branchPrefixes, pushMatch = true) {
   if (hasLerna(cwd)) {
     bumpWithLerna(keyword);
   } else {
     bumpWithYarn(keyword);
   }
+
   const currentVersion = getCurrentVersion(cwd);
 
-  await gitCall("push");
   await gitCall("tag", `v${currentVersion.major}`);
   await gitCall("tag", `v${currentVersion.major}.${currentVersion.minor}`);
   await gitCall("push", "-f", "--tags");
-}
 
-async function prepareNewBranch(cwd, keyword) {
-  console.log(`Bump keyword: ${keyword}`);
+  if (pushMatch) {
+    await gitCall("push");
+  }
 
-  const currentVersion = getCurrentVersion(cwd);
-  console.log(`Current version: ${currentVersion}`);
-
-  const nextVersion = currentVersion.inc(keyword);
-  const devVersionBranch = `dev/v${nextVersion.major}/v${nextVersion.major}.${nextVersion.minor}`;
-
-  await gitCall("switch", "-c", devVersionBranch);
-  await gitCall("push", "-u", "origin");
+  for (const branchPrefix in branchPrefixes) {
+    const workingBranch = `${branchPrefix}/v${currentVersion.major}/v${currentVersion.major}.${currentVersion.minor}`;
+    await gitCall("push", "origin", `HEAD:${workingBranch}`);
+  }
 }
 
 const BumpActions = {
-  "premajor": (cwd) => {
-    prepareNewBranch(cwd, "premajor").then(() => bump(cwd, "premajor"));
-  },
-  "preminor": (cwd) => {
-    prepareNewBranch(cwd, "preminor").then(() => bump(cwd, "preminor"));
-  },
-  "prepatch": (cwd) => bump(cwd, "prepatch"),
-  "major": (cwd) => bump(cwd, "major"),
-  "minor": (cwd) => bump(cwd, "minor"),
-  "patch": (cwd) => bump(cwd, "patch")
+  "patch": (cwd) => bump(cwd, "patch", ["release", "alpha"]),
+  "premajor": (cwd) => bump(cwd, "premajor", ["release", "alpha", "dev"], false),
+  "preminor": (cwd) => bump(cwd, "preminor", ["release", "alpha", "dev"], false),
+  "prerelease": (cwd) => bump(cwd, "prerelease")
 };
 
 exports.gitCall = gitCall;
