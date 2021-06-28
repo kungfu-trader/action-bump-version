@@ -70,7 +70,7 @@ const BumpActions = {
   "patch": (cwd) => bump(cwd, "patch")
 };
 
-exports.gitRun = gitCall;
+exports.gitCall = gitCall;
 
 exports.bumpVersion = function (bumpKeyword) {
   BumpActions[bumpKeyword](process.cwd());
