@@ -40,7 +40,7 @@ async function bump(cwd, keyword) {
   } else {
     bumpWithYarn(keyword);
   }
-  await git("push", "-u");
+  await git("push");
 }
 
 async function prepareNewBranch(cwd, keyword) {

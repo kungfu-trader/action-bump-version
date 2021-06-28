@@ -7,13 +7,21 @@ module.exports =
 
 const core = __nccwpck_require__(2186);
 const github = __nccwpck_require__(5438);
+const git = __nccwpck_require__(5138);
 const lib = __nccwpck_require__(2909);
 
 try {
     const context = github.context;
     const bumpKeyword = core.getInput('bump-keyword');
-    console.log(`GitHub Actor: ${context.actor} `);
-    lib.bumpVersion(bumpKeyword);
+
+    console.log(`GitHub Actor: ${context.actor}`);
+
+    const setupGit = async function () {
+        await git("config", "--global", "user.name", context.actor);
+        await git("config", "--global", "user.email", `${context.actor}@noreply.kungfu.link`);
+    };
+
+    setupGit().then(() => lib.bumpVersion(bumpKeyword));
 } catch (error) {
     core.setFailed(error.message);
 }
@@ -65,7 +73,7 @@ async function bump(cwd, keyword) {
   } else {
     bumpWithYarn(keyword);
   }
-  await git("push", "-u");
+  await git("push");
 }
 
 async function prepareNewBranch(cwd, keyword) {
