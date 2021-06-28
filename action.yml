@@ -6,7 +6,7 @@ inputs:
     description: "Increment version(s) by semver keyword"
     required: true
   default-branch:
-    description: "Default branch to push for detached HEAD"
+    description: "Default git branch to push for detached HEAD"
     default: "main"
 runs:
   using: "node12"
