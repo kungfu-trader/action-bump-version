@@ -40,7 +40,11 @@ async function bump(cwd, keyword) {
   } else {
     bumpWithYarn(keyword);
   }
+  const currentVersion = getCurrentVersion(cwd);
   await git("push");
+  await git("tag", `v${currentVersion.major}`);
+  await git("tag", `v${currentVersion.major}.${currentVersion.minor}`);
+  await git("push", "-f", "--tags");
 }
 
 async function prepareNewBranch(cwd, keyword) {
