@@ -30,7 +30,7 @@ async function gitCall(...args) {
   await git(...args);
 }
 
-async function bump(cwd, keyword, branchPrefixes, pushMatch = true) {
+async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
   if (hasLerna(cwd)) {
     bumpWithLerna(keyword);
   } else {
