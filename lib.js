@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
-const git = require('git-client');
+const git = require('nodegit');
+const gitCall = require('git-client');
 const glob = require("glob");
 const semver = require('semver');
 const { spawn, spawnSync } = require("child_process");
@@ -34,17 +35,27 @@ function bumpWithYarn(keyword) {
   spawnSync("yarn", ["version", `--${keyword}`], spawnOptsInherit);
 }
 
-async function bump(cwd, keyword) {
+async function gitRun(...args) {
+  console.log("$ git", ...args);
+  await gitCall(...args);
+}
+
+async function bump(cwd, keyword, defaultBranch) {
   if (hasLerna(cwd)) {
     bumpWithLerna(keyword);
   } else {
     bumpWithYarn(keyword);
   }
   const currentVersion = getCurrentVersion(cwd);
-  await git("push");
-  await git("tag", `v${currentVersion.major}`);
-  await git("tag", `v${currentVersion.major}.${currentVersion.minor}`);
-  await git("push", "-f", "--tags");
+
+  const repo = await git.Repository.open(cwd);
+  const branch = await repo.getCurrentBranch();
+  const remoteBranch = branch.isBranch() ? branch.shorthand() : defaultBranch;
+
+  await gitRun("push", "origin", `HEAD:${remoteBranch}`);
+  await gitRun("tag", `v${currentVersion.major}`);
+  await gitRun("tag", `v${currentVersion.major}.${currentVersion.minor}`);
+  await gitRun("push", "-f", "--tags");
 }
 
 async function prepareNewBranch(cwd, keyword) {
@@ -54,25 +65,27 @@ async function prepareNewBranch(cwd, keyword) {
   console.log(`Current version: ${currentVersion}`);
 
   const nextVersion = currentVersion.inc(keyword);
-  const versionBranch = `dev/v${nextVersion.major}/v${nextVersion.major}.${nextVersion.minor}`;
+  const devVersionBranch = `dev/v${nextVersion.major}/v${nextVersion.major}.${nextVersion.minor}`;
 
-  await git("switch", "-c", versionBranch);
-  await git("push", "-u", "origin", versionBranch);
+  await gitRun("switch", "-c", devVersionBranch);
+  await gitRun("push", "origin", `HEAD:${devVersionBranch}`);
 }
 
 const BumpActions = {
-  "premajor": (cwd) => {
-    prepareNewBranch(cwd, "premajor").then(() => bump(cwd, "premajor"));
+  "premajor": (cwd, defaultBranch) => {
+    prepareNewBranch(cwd, "premajor").then(() => bump(cwd, "premajor", defaultBranch));
   },
-  "preminor": (cwd) => {
-    prepareNewBranch(cwd, "preminor").then(() => bump(cwd, "preminor"));
+  "preminor": (cwd, defaultBranch) => {
+    prepareNewBranch(cwd, "preminor").then(() => bump(cwd, "preminor", defaultBranch));
   },
-  "prepatch": (cwd) => bump(cwd, "prepatch"),
-  "major": (cwd) => bump(cwd, "major"),
-  "minor": (cwd) => bump(cwd, "minor"),
-  "patch": (cwd) => bump(cwd, "patch")
+  "prepatch": (cwd, defaultBranch) => bump(cwd, "prepatch", defaultBranch),
+  "major": (cwd, defaultBranch) => bump(cwd, "major", defaultBranch),
+  "minor": (cwd, defaultBranch) => bump(cwd, "minor", defaultBranch),
+  "patch": (cwd, defaultBranch) => bump(cwd, "patch", defaultBranch)
 };
 
-exports.bumpVersion = function (bumpKeyword) {
-  BumpActions[bumpKeyword](process.cwd());
+exports.gitRun = gitRun;
+
+exports.bumpVersion = function (bumpKeyword, defaultBranch) {
+  BumpActions[bumpKeyword](process.cwd(), defaultBranch);
 };
