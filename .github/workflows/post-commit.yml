@@ -1,8 +1,9 @@
-name: Post Pull Request
+name: Post Commit
 
 on:
   push:
     paths:
+      - '.github/workflows/post-commit.yml'
       - 'package.json'
       - '**.js'
 
