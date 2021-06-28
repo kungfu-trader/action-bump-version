@@ -5,6 +5,9 @@ inputs:
   bump-keyword:
     description: "Increment version(s) by semver keyword"
     required: true
+  default-branch:
+    description: "Default branch to push for detached HEAD"
+    default: "main"
 runs:
   using: "node12"
   main: "dist/index.js"
