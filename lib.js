@@ -7,7 +7,6 @@ const semver = require('semver');
 const { spawn, spawnSync } = require("child_process");
 
 const spawnOptsInherit = { shell: true, stdio: "inherit", windowsHide: true };
-const spawnOptsPipe = { shell: true, stdio: "pipe", windowsHide: true };
 
 function getPackageJson(cwd) {
   const packageJsonPath = path.join(cwd, "package.json");
