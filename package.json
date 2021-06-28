@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-trader/action-bump-version",
-  "version": "1.1.0-0",
+  "version": "1.1.0-alpha.0",
   "main": "dist/index.js",
   "repository": "https://github.com/kungfu-trader/action-bump-version",
   "author": "Keren Dong",
@@ -12,8 +12,8 @@
     "@actions/core": "^1.4.0",
     "@actions/github": "^5.0.0",
     "git-client": "^1.8.3",
-    "nodegit": "^0.27.0",
     "glob": "^7.1.6",
+    "nodegit": "^0.27.0",
     "semver": "^7.3.4",
     "yargs": "^16.2.0"
   },
