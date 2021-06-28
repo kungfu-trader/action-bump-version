@@ -2,6 +2,9 @@ name: Bump Version
 
 on:
   push:
+    paths:
+      - 'action.yml'
+      - 'dist/index.js'
     branches:
       - main
 
