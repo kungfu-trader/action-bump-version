@@ -75,6 +75,8 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
   await gitCall("tag", `v${currentVersion.major}.${currentVersion.minor}`);
   await gitCall("push", "-f", "--tags");
 
+  await gitCall("fetch");
+
   if (pushMatch) {
     await gitCall("push");
   }
