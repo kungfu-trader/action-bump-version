@@ -1,0 +1,19 @@
+name: Bump Version - Minor
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Bump Version - Finalize Minor
+        uses: kungfu-trader/action-bump-version@v1
+        with:
+          bump-keyword: "preminor"
