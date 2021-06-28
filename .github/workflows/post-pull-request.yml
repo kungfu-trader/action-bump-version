@@ -1,7 +1,7 @@
-name: Publish
+name: Post Pull Request
 
 on:
-  push:
+  pull_request:
     paths:
       - 'action.yml'
       - 'dist/index.js'
@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2
         with:
-          node-version: '12'
+          node-version: '14'
           registry-url: 'https://npm.pkg.github.com'
           scope: '@kungfu-trader'
 
