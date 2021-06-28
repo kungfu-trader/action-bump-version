@@ -1,6 +1,6 @@
-name: "Update Version"
+name: "Bump Version"
 author: "Keren Dong"
-description: "Update project version"
+description: "Bump project(s) version"
 inputs:
   bump-keyword:
     description: "Increment version(s) by semver keyword"

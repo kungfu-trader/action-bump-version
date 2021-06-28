@@ -1,3 +1,5 @@
+const lib = require("./lib.js");
+
 const argv = require("yargs/yargs")(process.argv.slice(2))
     .option("bump-keyword", {
         description: "Increment version(s) by semver keyword", type: "string",
@@ -6,7 +8,5 @@ const argv = require("yargs/yargs")(process.argv.slice(2))
     .demandOption(["bump-keyword"])
     .help()
     .argv;
-
-const lib = require("./lib.js");
 
 lib.bumpVersion(argv.bumpKeyword);

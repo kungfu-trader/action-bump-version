@@ -12,6 +12,7 @@ const lib = __nccwpck_require__(2909);
 try {
     const context = github.context;
     const bumpKeyword = core.getInput('bump-keyword');
+    console.log(`github actor: ${context.actor} `);
     lib.bumpVersion(bumpKeyword);
 } catch (error) {
     core.setFailed(error.message);
@@ -54,7 +55,7 @@ function bump(cwd, next) {
   if (hasLerna(cwd)) {
     spawnSync("lerna", ["version", `${next}`, "--yes", "--no-git-tag-version", "--no-push"], spawnOptsInherit);
   } else {
-    spawnSync("yarn", ["version", `${next}`], spawnOptsInherit);
+    spawnSync("yarn", ["version", `--${next}`], spawnOptsInherit);
   }
 }
 
@@ -74,9 +75,10 @@ const actions = {
   "preminor": (cwd) => {
     prepareNewBranch(cwd, "preminor").then(() => bump(cwd, "preminor"));
   },
-  "prepatch": (cwd) => {
-    bump(cwd, "prepatch");
-  }
+  "prepatch": (cwd) => bump(cwd, "prepatch"),
+  "major": (cwd) => bump(cwd, "major"),
+  "minor": (cwd) => bump(cwd, "minor"),
+  "patch": (cwd) => bump(cwd, "patch")
 };
 
 exports.bumpVersion = function (bumpKeyword) {

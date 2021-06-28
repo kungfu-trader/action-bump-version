@@ -5,6 +5,7 @@ const lib = require("./lib.js");
 try {
     const context = github.context;
     const bumpKeyword = core.getInput('bump-keyword');
+    console.log(`github actor: ${context.actor} `);
     lib.bumpVersion(bumpKeyword);
 } catch (error) {
     core.setFailed(error.message);
