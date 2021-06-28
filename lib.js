@@ -22,7 +22,7 @@ function bumpWithLerna(keyword) {
 }
 
 function bumpWithYarn(keyword) {
-  spawnSync("yarn", ["version", `--${keyword}`], spawnOptsInherit);
+  spawnSync("yarn", ["version", `--${keyword}`, "--preid", "alpha"], spawnOptsInherit);
 }
 
 async function gitCall(...args) {
@@ -30,7 +30,7 @@ async function gitCall(...args) {
   await git(...args);
 }
 
-async function bump(cwd, keyword, branchPrefixes, pushMatch = true) {
+async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
   if (hasLerna(cwd)) {
     bumpWithLerna(keyword);
   } else {
@@ -47,7 +47,7 @@ async function bump(cwd, keyword, branchPrefixes, pushMatch = true) {
     await gitCall("push");
   }
 
-  for (const branchPrefix in branchPrefixes) {
+  for (const branchPrefix of branchPrefixes) {
     const workingBranch = `${branchPrefix}/v${currentVersion.major}/v${currentVersion.major}.${currentVersion.minor}`;
     await gitCall("push", "origin", `HEAD:${workingBranch}`);
   }
