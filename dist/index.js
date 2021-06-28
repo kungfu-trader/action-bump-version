@@ -54,7 +54,7 @@ function bumpWithLerna(keyword) {
 }
 
 function bumpWithYarn(keyword) {
-  spawnSync("yarn", ["version", `--${keyword}`], spawnOptsInherit);
+  spawnSync("yarn", ["version", `--${keyword}`, "--preid", "alpha"], spawnOptsInherit);
 }
 
 async function gitCall(...args) {
