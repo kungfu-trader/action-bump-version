@@ -1,10 +1,10 @@
-name: Post Pull Request
+name: Bump Version - Patch
 
 on:
   pull_request:
     types: [closed]
     branches:
-      - main
+      - release/v*/v*
 
 jobs:
   build:
