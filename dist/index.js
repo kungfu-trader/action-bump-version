@@ -79,7 +79,7 @@ async function bump(cwd, keyword, branchPrefixes, pushMatch = true) {
     await gitCall("push");
   }
 
-  for (const branchPrefix in branchPrefixes) {
+  for (const branchPrefix of branchPrefixes) {
     const workingBranch = `${branchPrefix}/v${currentVersion.major}/v${currentVersion.major}.${currentVersion.minor}`;
     await gitCall("push", "origin", `HEAD:${workingBranch}`);
   }
