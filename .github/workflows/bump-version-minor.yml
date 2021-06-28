@@ -13,7 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Bump Version - Finalize Minor
+      - name: Bump Version
         uses: kungfu-trader/action-bump-version@v1
         with:
           bump-keyword: "preminor"
