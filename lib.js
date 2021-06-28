@@ -26,24 +26,33 @@ function getCurrentVersion(cwd) {
   return semver.parse(config.version);
 }
 
-function bump(cwd, next) {
-  if (hasLerna(cwd)) {
-    spawnSync("lerna", ["version", `${next}`, "--yes", "--no-git-tag-version", "--no-push"], spawnOptsInherit);
-  } else {
-    spawnSync("yarn", ["version", `--${next}`], spawnOptsInherit);
-  }
+function bumpWithLerna(keyword) {
+  spawnSync("lerna", ["version", `${keyword}`, "--yes", "--no-push"], spawnOptsInherit);
 }
 
-async function prepareNewBranch(cwd, next) {
+function bumpWithYarn(keyword) {
+  spawnSync("yarn", ["version", `--${keyword}`], spawnOptsInherit);
+}
+
+async function bump(cwd, keyword) {
+  if (hasLerna(cwd)) {
+    bumpWithLerna(keyword);
+  } else {
+    bumpWithYarn(keyword);
+  }
+  await git("push", "-u");
+}
+
+async function prepareNewBranch(cwd, keyword) {
   const currentVersion = getCurrentVersion(cwd);
-  console.log(`increment ${next}: ${currentVersion}`);
-  const nextVersion = currentVersion.inc(next);
+  console.log(`increment ${keyword}: ${currentVersion}`);
+  const nextVersion = currentVersion.inc(keyword);
   const versionBranch = `dev/v${nextVersion.major}/v${nextVersion.major}.${nextVersion.minor}`;
   await git("switch", "-c", versionBranch);
   await git("push", "-u", "origin", versionBranch);
 }
 
-const actions = {
+const BumpActions = {
   "premajor": (cwd) => {
     prepareNewBranch(cwd, "premajor").then(() => bump(cwd, "premajor"));
   },
@@ -57,5 +66,5 @@ const actions = {
 };
 
 exports.bumpVersion = function (bumpKeyword) {
-  actions[bumpKeyword](process.cwd());
+  BumpActions[bumpKeyword](process.cwd());
 };
