@@ -3,7 +3,7 @@ const path = require("path");
 const git = require('git-client');
 const glob = require("glob");
 const semver = require('semver');
-const { spawn, spawnSync } = require("child_process");
+const { spawnSync } = require("child_process");
 
 const spawnOpts = { shell: true, stdio: "pipe", windowsHide: true };
 
