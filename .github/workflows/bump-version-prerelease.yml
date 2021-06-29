@@ -12,6 +12,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - run: |
+          echo pull_request merged [${{ github.event.pull_request.merged }}]
+
       - name: Bump Version
         uses: kungfu-trader/action-bump-version@v1
         with:
