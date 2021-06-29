@@ -17,6 +17,11 @@ function getCurrentVersion(cwd) {
   return semver.parse(config.version);
 }
 
+function verify(cwd, sourceRef, destRef) {
+  console.log(`Source ref: ${sourceRef}`);
+  console.log(`Dest ref: ${destRef}`);
+}
+
 function bumpWithLerna(keyword) {
   spawnSync("lerna", ["version", `${keyword}`, "--yes", "--no-push"], spawnOptsInherit);
 }
@@ -56,8 +61,8 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
     "dev": `alpha/${branchPath}`
   };
   for (const branchPrefix of branchPrefixes) {
-    const targetBranch = `${branchPrefix}/${branchPath}`;
     const upstreamBranch = upstreams[branchPrefix];
+    const targetBranch = `${branchPrefix}/${branchPath}`;
     await gitCall("switch", targetBranch);
     await gitCall("merge", upstreamBranch);
     await gitCall("push", `HEAD:origin/${targetBranch}`);
@@ -65,14 +70,15 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
 }
 
 const BumpActions = {
-  "patch": (cwd) => bump(cwd, "patch", ["release", "alpha"]),
+  "verify": verify,
+  "patch": (cwd) => bump(cwd, "patch", ["alpha", "dev"]),
   "premajor": (cwd) => bump(cwd, "premajor", ["release", "alpha", "dev"], false),
   "preminor": (cwd) => bump(cwd, "preminor", ["release", "alpha", "dev"], false),
-  "prerelease": (cwd) => bump(cwd, "prerelease")
+  "prerelease": (cwd) => bump(cwd, "prerelease", ["dev"])
 };
 
 exports.gitCall = gitCall;
 
-exports.bumpVersion = function (bumpKeyword) {
-  BumpActions[bumpKeyword](process.cwd());
+exports.bumpVersion = function (bumpKeyword, sourceRef, destRef) {
+  BumpActions[bumpKeyword](process.cwd(), sourceRef, destRef);
 };
