@@ -90,7 +90,6 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
   await gitCall("tag", `v${currentVersion.major}`);
   await gitCall("tag", `v${currentVersion.major}.${currentVersion.minor}`);
   await gitCall("push", "-f", "--tags");
-  await gitCall("fetch");
 
   if (pushMatch) {
     await gitCall("push");
@@ -102,12 +101,11 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
     "alpha": `release/${branchPath}`,
     "dev": `alpha/${branchPath}`
   };
+  await gitCall("fetch");
   for (const branchPrefix of branchPrefixes) {
     const upstreamBranch = upstreams[branchPrefix];
     const targetBranch = `${branchPrefix}/${branchPath}`;
-    await gitCall("switch", targetBranch);
-    await gitCall("reset", "--hard", `origin/${upstreamBranch}`);
-    await gitCall("push", "-f", `origin/${targetBranch}`);
+    await gitCall("push", "-f", `HEAD:origin/${targetBranch}`);
   }
 }
 
