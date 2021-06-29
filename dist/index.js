@@ -11,7 +11,17 @@ const lib = __nccwpck_require__(2909);
 
 try {
     const context = github.context;
+
+    const isPullRequest = context.eventName == "pull_request";
+    const isManualTrigger = context.eventName == "workflow_dispatch";
+
+    if (!isPullRequest && !isManualTrigger) {
+        throw new Error("Bump version can only be triggered by pull_request or workflow_dispatch");
+    }
+
     const bumpKeyword = core.getInput('bump-keyword');
+    const sourceRef = core.getInput('source-ref');
+    const destRef = core.getInput('dest-ref');
 
     console.log(`GitHub Actor: ${context.actor}`);
 
@@ -20,7 +30,12 @@ try {
         await lib.gitCall("config", "--global", "user.email", `${context.actor}@noreply.kungfu.link`);
     };
 
-    setupGit().then(() => lib.bumpVersion(bumpKeyword));
+    setupGit().then(() => {
+        lib.bumpVersion(bumpKeyword, sourceRef, destRef).catch((error) => {
+            console.error(error);
+            core.setFailed(error.message);
+        });
+    });
 } catch (error) {
     core.setFailed(error.message);
 }
@@ -35,9 +50,9 @@ const path = __nccwpck_require__(5622);
 const git = __nccwpck_require__(5138);
 const glob = __nccwpck_require__(1957);
 const semver = __nccwpck_require__(1383);
-const { spawn, spawnSync } = __nccwpck_require__(3129);
+const { spawnSync } = __nccwpck_require__(3129);
 
-const spawnOptsInherit = { shell: true, stdio: "inherit", windowsHide: true };
+const spawnOpts = { shell: true, stdio: "pipe", windowsHide: true };
 
 function hasLerna(cwd) {
   return fs.existsSync(path.join(cwd, "lerna.json"));
@@ -50,19 +65,20 @@ function getCurrentVersion(cwd) {
 }
 
 function bumpWithLerna(keyword) {
-  spawnSync("lerna", ["version", `${keyword}`, "--yes", "--no-push"], spawnOptsInherit);
+  spawnSync("lerna", ["version", `${keyword}`, "--yes", "--no-push"], spawnOpts);
 }
 
 function bumpWithYarn(keyword) {
-  spawnSync("yarn", ["version", `--${keyword}`, "--preid", "alpha"], spawnOptsInherit);
+  spawnSync("yarn", ["version", `--${keyword}`, "--preid", "alpha"], spawnOpts);
 }
 
 async function gitCall(...args) {
   console.log("$ git", ...args);
-  await git(...args);
+  const output = await git(...args);
+  console.log(output);
 }
 
-async function bump(cwd, keyword, branchPrefixes, pushMatch = true) {
+async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
   if (hasLerna(cwd)) {
     bumpWithLerna(keyword);
   } else {
@@ -71,31 +87,48 @@ async function bump(cwd, keyword, branchPrefixes, pushMatch = true) {
 
   const currentVersion = getCurrentVersion(cwd);
 
-  await gitCall("tag", `v${currentVersion.major}`);
-  await gitCall("tag", `v${currentVersion.major}.${currentVersion.minor}`);
+  await gitCall("tag", "-f", `v${currentVersion.major}`);
+  await gitCall("tag", "-f", `v${currentVersion.major}.${currentVersion.minor}`);
   await gitCall("push", "-f", "--tags");
 
   if (pushMatch) {
     await gitCall("push");
   }
 
-  for (const branchPrefix in branchPrefixes) {
-    const workingBranch = `${branchPrefix}/v${currentVersion.major}/v${currentVersion.major}.${currentVersion.minor}`;
-    await gitCall("push", "origin", `HEAD:${workingBranch}`);
+  const branchPath = `v${currentVersion.major}/v${currentVersion.major}.${currentVersion.minor}`;
+  const upstreams = {
+    "release": "main",
+    "alpha": `release/${branchPath}`,
+    "dev": `alpha/${branchPath}`
+  };
+  await gitCall("fetch");
+  for (const branchPrefix of branchPrefixes) {
+    const upstreamBranch = upstreams[branchPrefix];
+    const targetBranch = `${branchPrefix}/${branchPath}`;
+    await gitCall("switch", targetBranch);
+    await gitCall("reset", "--hard", `origin/${upstreamBranch}`);
+    await gitCall("push", "-f");
   }
 }
 
+async function verify(cwd, sourceRef, destRef) {
+  const currentVersion = getCurrentVersion(cwd);
+  console.log(`Source ref: ${sourceRef}`);
+  console.log(`Dest ref: ${destRef}`);
+}
+
 const BumpActions = {
-  "patch": (cwd) => bump(cwd, "patch", ["release", "alpha"]),
-  "premajor": (cwd) => bump(cwd, "premajor", ["release", "alpha", "dev"], false),
-  "preminor": (cwd) => bump(cwd, "preminor", ["release", "alpha", "dev"], false),
-  "prerelease": (cwd) => bump(cwd, "prerelease")
+  "verify": verify,
+  "patch": async (cwd) => bump(cwd, "patch", ["alpha", "dev"]),
+  "premajor": async (cwd) => bump(cwd, "premajor", ["release", "alpha", "dev"], false),
+  "preminor": async (cwd) => bump(cwd, "preminor", ["release", "alpha", "dev"], false),
+  "prerelease": async (cwd) => bump(cwd, "prerelease", ["dev"])
 };
 
 exports.gitCall = gitCall;
 
-exports.bumpVersion = function (bumpKeyword) {
-  BumpActions[bumpKeyword](process.cwd());
+exports.bumpVersion = function (bumpKeyword, sourceRef, destRef) {
+  return BumpActions[bumpKeyword](process.cwd(), sourceRef, destRef);
 };
 
 /***/ }),
