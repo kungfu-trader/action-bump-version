@@ -17,11 +17,6 @@ function getCurrentVersion(cwd) {
   return semver.parse(config.version);
 }
 
-function verify(cwd, sourceRef, destRef) {
-  console.log(`Source ref: ${sourceRef}`);
-  console.log(`Dest ref: ${destRef}`);
-}
-
 function bumpWithLerna(keyword) {
   spawnSync("lerna", ["version", `${keyword}`, "--yes", "--no-push"], spawnOptsInherit);
 }
@@ -47,7 +42,6 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
   await gitCall("tag", `v${currentVersion.major}`);
   await gitCall("tag", `v${currentVersion.major}.${currentVersion.minor}`);
   await gitCall("push", "-f", "--tags");
-
   await gitCall("fetch");
 
   if (pushMatch) {
@@ -64,21 +58,28 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
     const upstreamBranch = upstreams[branchPrefix];
     const targetBranch = `${branchPrefix}/${branchPath}`;
     await gitCall("switch", targetBranch);
-    await gitCall("merge", "--allow-unrelated-histories", `origin/${upstreamBranch}`);
+    await gitCall("reset", "--hard", `origin/${targetBranch}`);
+    await gitCall("merge", `origin/${upstreamBranch}`);
     await gitCall("push", `HEAD:origin/${targetBranch}`);
   }
 }
 
+async function verify(cwd, sourceRef, destRef) {
+  const currentVersion = getCurrentVersion(cwd);
+  console.log(`Source ref: ${sourceRef}`);
+  console.log(`Dest ref: ${destRef}`);
+}
+
 const BumpActions = {
   "verify": verify,
-  "patch": (cwd) => bump(cwd, "patch", ["alpha", "dev"]),
-  "premajor": (cwd) => bump(cwd, "premajor", ["release", "alpha", "dev"], false),
-  "preminor": (cwd) => bump(cwd, "preminor", ["release", "alpha", "dev"], false),
-  "prerelease": (cwd) => bump(cwd, "prerelease", ["dev"])
+  "patch": async (cwd) => bump(cwd, "patch", ["alpha", "dev"]),
+  "premajor": async (cwd) => bump(cwd, "premajor", ["release", "alpha", "dev"], false),
+  "preminor": async (cwd) => bump(cwd, "preminor", ["release", "alpha", "dev"], false),
+  "prerelease": async (cwd) => bump(cwd, "prerelease", ["dev"])
 };
 
 exports.gitCall = gitCall;
 
 exports.bumpVersion = function (bumpKeyword, sourceRef, destRef) {
-  BumpActions[bumpKeyword](process.cwd(), sourceRef, destRef);
+  return BumpActions[bumpKeyword](process.cwd(), sourceRef, destRef);
 };
