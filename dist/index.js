@@ -118,7 +118,6 @@ async function verify(cwd, sourceRef, destRef) {
 }
 
 const BumpActions = {
-  "test": async(cwd) => gitCall("status"),
   "verify": verify,
   "patch": async (cwd) => bump(cwd, "patch", ["alpha", "dev"]),
   "premajor": async (cwd) => bump(cwd, "premajor", ["release", "alpha", "dev"], false),

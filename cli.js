@@ -4,7 +4,7 @@ const argv = require("yargs/yargs")(process.argv.slice(2))
     .option("bump-keyword", {
         description: "Increment version(s) by semver keyword",
         type: "string",
-        choices: ["patch", "premajor", "preminor", "prerelease", "test"]
+        choices: ["patch", "premajor", "preminor", "prerelease", "verify"]
     })
     .demandOption(["bump-keyword"])
     .help()
