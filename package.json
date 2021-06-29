@@ -12,7 +12,6 @@
     "@actions/core": "^1.4.0",
     "@actions/github": "^5.0.0",
     "git-client": "^1.8.3",
-    "nodegit": "^0.27.0",
     "glob": "^7.1.6",
     "semver": "^7.3.4",
     "yargs": "^16.2.0"
