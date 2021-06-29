@@ -15,5 +15,6 @@ jobs:
 
       - name: Bump Version
         uses: kungfu-trader/action-bump-version@v1
+        if: ${{ github.event.pull_request.merged == 'true' }}
         with:
           bump-keyword: "patch"

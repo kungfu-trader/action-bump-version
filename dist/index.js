@@ -91,7 +91,7 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
     const targetBranch = `${branchPrefix}/${branchPath}`;
     const upstreamBranch = upstreams[branchPrefix];
     await gitCall("switch", targetBranch);
-    await gitCall("merge", `origin/${upstreamBranch}`);
+    await gitCall("merge", upstreamBranch);
     await gitCall("push", `HEAD:origin/${targetBranch}`);
   }
 }
