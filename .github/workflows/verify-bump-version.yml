@@ -20,4 +20,4 @@ jobs:
         with:
           bump-keyword: "verify"
           source-ref: ${{ github.head_ref}}
-          dest-ref: ${{ github.ref }}
+          dest-ref: ${{ github.base_ref }}
