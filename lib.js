@@ -27,7 +27,8 @@ function bumpWithYarn(keyword) {
 
 async function gitCall(...args) {
   console.log("$ git", ...args);
-  await git(...args);
+  const output = await git(...args);
+  console.log(output);
 }
 
 async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
@@ -37,7 +38,7 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
     bumpWithYarn(keyword);
   }
 
-  const currentVersion = getCurrentVersion(cwd);
+  const currentVersion = getCurrentVersion(cwd);``
 
   await gitCall("tag", `v${currentVersion.major}`);
   await gitCall("tag", `v${currentVersion.major}.${currentVersion.minor}`);
@@ -58,6 +59,7 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
     const upstreamBranch = upstreams[branchPrefix];
     const targetBranch = `${branchPrefix}/${branchPath}`;
     await gitCall("switch", targetBranch);
+    await gitCall("status");
     await gitCall("reset", "--hard", `origin/${targetBranch}`);
     await gitCall("diff", `origin/${upstreamBranch}`);
     await gitCall("merge", `origin/${upstreamBranch}`);
@@ -72,6 +74,7 @@ async function verify(cwd, sourceRef, destRef) {
 }
 
 const BumpActions = {
+  "test": async(cwd) => gitCall("status"),
   "verify": verify,
   "patch": async (cwd) => bump(cwd, "patch", ["alpha", "dev"]),
   "premajor": async (cwd) => bump(cwd, "premajor", ["release", "alpha", "dev"], false),
