@@ -85,7 +85,7 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
     bumpWithYarn(keyword);
   }
 
-  const currentVersion = getCurrentVersion(cwd);``
+  const currentVersion = getCurrentVersion(cwd);
 
   await gitCall("tag", `v${currentVersion.major}`);
   await gitCall("tag", `v${currentVersion.major}.${currentVersion.minor}`);
@@ -106,11 +106,11 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
     const upstreamBranch = upstreams[branchPrefix];
     const targetBranch = `${branchPrefix}/${branchPath}`;
     await gitCall("switch", upstreamBranch);
-    await gitCall("log", "-n", "3");
+    await gitCall("log", "-n", "1");
     await gitCall("switch", targetBranch);
-    await gitCall("log", "-n", "3");
+    await gitCall("log", "-n", "1");
     await gitCall("diff", `${upstreamBranch}`);
-    await gitCall("merge", `${upstreamBranch}`);
+    await gitCall("merge", "-v", `${upstreamBranch}`);
     await gitCall("push", `HEAD:origin/${targetBranch}`);
   }
 }

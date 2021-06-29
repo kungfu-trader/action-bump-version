@@ -12,6 +12,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - run: |
+          which git
+          git --version
+          git remote -v
+
       - name: Bump Version
         uses: kungfu-trader/action-bump-version@v1
         with:
