@@ -23,7 +23,11 @@ try {
         await lib.gitCall("config", "--global", "user.email", `${context.actor}@noreply.kungfu.link`);
     };
 
-    setupGit().then(() => lib.bumpVersion(bumpKeyword, sourceRef, destRef));
+    setupGit().then(() => {
+        lib.bumpVersion(bumpKeyword, sourceRef, destRef).catch((error) => {
+            core.setFailed(error.message);
+        });
+    });
 } catch (error) {
     core.setFailed(error.message);
 }
