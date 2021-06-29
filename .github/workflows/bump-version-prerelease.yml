@@ -25,4 +25,5 @@ jobs:
 
       - run: |
           git switch dev/v1/v1.1
-          git rebase -v alpha/v1/v1.1
+          git cherry-pick refs/heads/alpha/v1/v1.1
+          git log -n 3
