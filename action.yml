@@ -5,6 +5,10 @@ inputs:
   bump-keyword:
     description: "Increment version(s) by semver keyword"
     required: true
+  source-ref:
+    description: "Source ref of the pull request"
+  dest-ref:
+    description: "Dest ref of the pull request"
 runs:
   using: "node12"
   main: "dist/index.js"

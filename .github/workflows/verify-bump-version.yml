@@ -1,0 +1,23 @@
+name: Verify - Bump Version
+on:
+  pull_request:
+    types: [opened]
+    branches:
+      - dev/v*/v*
+      - alpha/v*/v*
+      - release/v*/v*
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Verify
+        uses: kungfu-trader/action-bump-version@v1
+        with:
+          bump-keyword: "verify"
+          source-ref: ${{ github.head_ref}}
+          dest-ref: ${{ github.ref }}

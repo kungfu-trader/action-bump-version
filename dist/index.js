@@ -11,7 +11,17 @@ const lib = __nccwpck_require__(2909);
 
 try {
     const context = github.context;
+
+    const isPullRequest = context.eventName == "pull_request";
+    const isManualTrigger = context.eventName == "workflow_dispatch";
+
+    if (!isPullRequest && !isManualTrigger) {
+        throw new Error("Bump version can only be triggered by pull_request or workflow_dispatch");
+    }
+
     const bumpKeyword = core.getInput('bump-keyword');
+    const sourceRef = core.getInput('source-ref');
+    const destRef = core.getInput('dest-ref');
 
     console.log(`GitHub Actor: ${context.actor}`);
 
@@ -20,7 +30,7 @@ try {
         await lib.gitCall("config", "--global", "user.email", `${context.actor}@noreply.kungfu.link`);
     };
 
-    setupGit().then(() => lib.bumpVersion(bumpKeyword));
+    setupGit().then(() => lib.bumpVersion(bumpKeyword, sourceRef, destRef));
 } catch (error) {
     core.setFailed(error.message);
 }
@@ -47,6 +57,11 @@ function getCurrentVersion(cwd) {
   const configPath = path.join(cwd, hasLerna(cwd) ? "lerna.json" : "package.json");
   const config = JSON.parse(fs.readFileSync(configPath));
   return semver.parse(config.version);
+}
+
+function verify(cwd, sourceRef, destRef) {
+  console.log(`Source ref: ${sourceRef}`);
+  console.log(`Dest ref: ${destRef}`);
 }
 
 function bumpWithLerna(keyword) {
@@ -88,8 +103,8 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
     "dev": `alpha/${branchPath}`
   };
   for (const branchPrefix of branchPrefixes) {
-    const targetBranch = `${branchPrefix}/${branchPath}`;
     const upstreamBranch = upstreams[branchPrefix];
+    const targetBranch = `${branchPrefix}/${branchPath}`;
     await gitCall("switch", targetBranch);
     await gitCall("merge", upstreamBranch);
     await gitCall("push", `HEAD:origin/${targetBranch}`);
@@ -97,16 +112,17 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
 }
 
 const BumpActions = {
-  "patch": (cwd) => bump(cwd, "patch", ["release", "alpha"]),
+  "verify": verify,
+  "patch": (cwd) => bump(cwd, "patch", ["alpha", "dev"]),
   "premajor": (cwd) => bump(cwd, "premajor", ["release", "alpha", "dev"], false),
   "preminor": (cwd) => bump(cwd, "preminor", ["release", "alpha", "dev"], false),
-  "prerelease": (cwd) => bump(cwd, "prerelease")
+  "prerelease": (cwd) => bump(cwd, "prerelease", ["dev"])
 };
 
 exports.gitCall = gitCall;
 
-exports.bumpVersion = function (bumpKeyword) {
-  BumpActions[bumpKeyword](process.cwd());
+exports.bumpVersion = function (bumpKeyword, sourceRef, destRef) {
+  BumpActions[bumpKeyword](process.cwd(), sourceRef, destRef);
 };
 
 /***/ }),
