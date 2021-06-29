@@ -40,8 +40,8 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
 
   const currentVersion = getCurrentVersion(cwd);
 
-  await gitCall("tag", `v${currentVersion.major}`);
-  await gitCall("tag", `v${currentVersion.major}.${currentVersion.minor}`);
+  await gitCall("tag", "-f", `v${currentVersion.major}`);
+  await gitCall("tag", "-f", `v${currentVersion.major}.${currentVersion.minor}`);
   await gitCall("push", "-f", "--tags");
 
   if (pushMatch) {
@@ -71,7 +71,6 @@ async function verify(cwd, sourceRef, destRef) {
 }
 
 const BumpActions = {
-  "test": async(cwd) => gitCall("status"),
   "verify": verify,
   "patch": async (cwd) => bump(cwd, "patch", ["alpha", "dev"]),
   "premajor": async (cwd) => bump(cwd, "premajor", ["release", "alpha", "dev"], false),
