@@ -43,7 +43,6 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
   await gitCall("tag", `v${currentVersion.major}`);
   await gitCall("tag", `v${currentVersion.major}.${currentVersion.minor}`);
   await gitCall("push", "-f", "--tags");
-  await gitCall("fetch");
 
   if (pushMatch) {
     await gitCall("push");
@@ -60,7 +59,7 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
     const targetBranch = `${branchPrefix}/${branchPath}`;
     await gitCall("switch", targetBranch);
     await gitCall("merge", `origin/${upstreamBranch}`);
-    await gitCall("push", `HEAD:origin/${targetBranch}`);
+    await gitCall("push");
   }
 }
 
