@@ -32,6 +32,7 @@ try {
 
     setupGit().then(() => {
         lib.bumpVersion(bumpKeyword, sourceRef, destRef).catch((error) => {
+            console.error(error);
             core.setFailed(error.message);
         });
     });
@@ -105,6 +106,7 @@ async function bump(cwd, keyword, branchPrefixes = [], pushMatch = true) {
     const targetBranch = `${branchPrefix}/${branchPath}`;
     await gitCall("switch", targetBranch);
     await gitCall("reset", "--hard", `origin/${targetBranch}`);
+    await gitCall("diff", `origin/${upstreamBranch}`);
     await gitCall("merge", `origin/${upstreamBranch}`);
     await gitCall("push", `HEAD:origin/${targetBranch}`);
   }
