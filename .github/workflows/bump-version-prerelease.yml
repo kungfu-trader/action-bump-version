@@ -16,8 +16,14 @@ jobs:
           which git
           git --version
           git remote -v
+          git branch -v
 
       - name: Bump Version
         uses: kungfu-trader/action-bump-version@v1
         with:
           bump-keyword: "prerelease"
+
+      - run: |
+          git switch alpha/v1/v1.1
+          git switch dev/v1/v1.1
+          git merge -v alpha/v1/v1.1

@@ -80,7 +80,7 @@ const BumpActions = {
   "patch": async (cwd) => bump(cwd, "patch", ["alpha", "dev"]),
   "premajor": async (cwd) => bump(cwd, "premajor", ["release", "alpha", "dev"], false),
   "preminor": async (cwd) => bump(cwd, "preminor", ["release", "alpha", "dev"], false),
-  "prerelease": async (cwd) => bump(cwd, "prerelease", ["dev"])
+  "prerelease": async (cwd) => bump(cwd, "prerelease")
 };
 
 exports.gitCall = gitCall;
