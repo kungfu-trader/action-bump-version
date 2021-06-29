@@ -5,7 +5,7 @@ const glob = require("glob");
 const semver = require('semver');
 const { spawn, spawnSync } = require("child_process");
 
-const spawnOptsInherit = { shell: true, stdio: "inherit", windowsHide: true };
+const spawnOpts = { shell: true, stdio: "pipe", windowsHide: true };
 
 function hasLerna(cwd) {
   return fs.existsSync(path.join(cwd, "lerna.json"));
@@ -18,11 +18,11 @@ function getCurrentVersion(cwd) {
 }
 
 function bumpWithLerna(keyword) {
-  spawnSync("lerna", ["version", `${keyword}`, "--yes", "--no-push"], spawnOptsInherit);
+  spawnSync("lerna", ["version", `${keyword}`, "--yes", "--no-push"], spawnOpts);
 }
 
 function bumpWithYarn(keyword) {
-  spawnSync("yarn", ["version", `--${keyword}`, "--preid", "alpha"], spawnOptsInherit);
+  spawnSync("yarn", ["version", `--${keyword}`, "--preid", "alpha"], spawnOpts);
 }
 
 async function gitCall(...args) {
