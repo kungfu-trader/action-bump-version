@@ -1,15 +1,14 @@
-name: Verify - Bump Version
+name: Bump Version - Verify
 on:
   pull_request:
     types: [opened]
     branches:
-      - dev/v*/v*
       - alpha/v*/v*
       - release/v*/v*
       - main
 
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
