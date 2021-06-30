@@ -100,7 +100,7 @@ async function push(cwd, keyword) {
   };
   const currentVersion = getCurrentVersion(cwd);
 
-  await gitCall("fetch");
+  await gitCall("fetch", "--all");
   await gitCall("tag", "-f", `v${currentVersion.major}`);
   await gitCall("tag", "-f", `v${currentVersion.major}.${currentVersion.minor}`);
   await gitCall("push", "-f", "--tags");

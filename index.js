@@ -1,6 +1,7 @@
 const core = require('@actions/core');
 const coreCommand = require('@actions/core/lib/command');
 const github = require("@actions/github");
+const { context } = require('@actions/github/lib/utils');
 const lib = require("./lib.js");
 
 const invoked = !!process.env['STATE_INVOKED'];
@@ -14,7 +15,7 @@ const handleError = (error) => {
     core.setFailed(error.message);
 };
 
-function main() {
+async function main() {
     coreCommand.issueCommand('save-state', { name: 'INVOKED' }, 'true');
 
     const context = github.context;
@@ -26,26 +27,23 @@ function main() {
         throw new Error("Bump version can only be triggered by pull_request or workflow_dispatch");
     }
 
-    console.log(`GitHub Actor: ${context.actor}`);
+    await lib.gitCall("config", "--global", "user.name", context.actor);
+    await lib.gitCall("config", "--global", "user.email", `${context.actor}@noreply.kungfu.link`);
 
-    const setupGit = async function () {
-        await lib.gitCall("config", "--global", "user.name", context.actor);
-        await lib.gitCall("config", "--global", "user.email", `${context.actor}@noreply.kungfu.link`);
-    };
-
-    setupGit().then(() => lib.bumpVersion(bumpKeyword, sourceRef, destRef)).catch(handleError);
+    lib.bumpVersion(bumpKeyword, sourceRef, destRef);
 }
 
-function post() {
-    lib.pushOrigin(bumpKeyword, sourceRef, destRef).catch(handleError);
+async function post() {
+    console.log(`serverUrl: ${context.serverUrl}`);
+    console.log(`issue: ${context.issue()}`);
+    console.log(`repo: ${context.repo()}`);
+    const actor = core.getInput('github-actor') || context.actor;
+    const token = core.getInput('github-token') || process.env.GITHUB_TOKEN;
+    const url = process.env.GITHUB_REPOSITORY.replace("http://", `http://${actor}:${token}`);
+    await lib.gitCall("git", "remote", "add", "auth", url);
+    await lib.pushOrigin(bumpKeyword, sourceRef, destRef);
 }
 
-try {
-    if (!invoked) {
-        main();
-    } else {
-        post();
-    }
-} catch (error) {
-    handleError(error);
-}
+const run = invoked ? post : main;
+
+run().catch(handleError);
