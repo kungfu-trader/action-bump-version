@@ -41,12 +41,12 @@ async function main() {
 }
 
 async function post() {
-    console.log(process.env.GITHUB_REPOSITORY);
     const actor = core.getInput('github-actor') || context.actor;
     const token = core.getInput('github-token') || process.env.GITHUB_TOKEN;
+    console.log(`actor: ${actor}`);
+    console.log(`token: ${token}`);
     const url = `https://${actor}:${token}@github.com/${process.env.GITHUB_REPOSITORY}`;
-    await lib.gitCall("remote", "add", "auth", url);
-    await lib.gitCall("fetch", "auth");
+    await lib.gitCall("remote", "add", "github", url);
     await lib.pushOrigin(bumpKeyword, sourceRef, destRef);
 }
 
@@ -144,8 +144,8 @@ async function push(cwd, keyword) {
   const pushback = {
     "premajor": async () => { },
     "preminor": async () => { },
-    "prerelease": async () => gitCall("push", "-f"),
-    "patch": async () => gitCall("push", "-f")
+    "prerelease": async () => gitCall("push", "-f", "github"),
+    "patch": async () => gitCall("push", "-f", "github")
   };
   const downstreams = {
     "premajor": ["release", "alpha", "dev"],
@@ -178,7 +178,7 @@ async function push(cwd, keyword) {
     const targetBranch = `${branchPrefix}/${branchPath}`;
     await gitCall("switch", ...switchOpts[keyword], targetBranch);
     await gitCall("reset", "--hard", upstreamBranch);
-    await gitCall("push", "-u", "-f", "origin", targetBranch);
+    await gitCall("push", "-u", "-f", "github", targetBranch);
   }
 }
 
