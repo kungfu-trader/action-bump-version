@@ -1,14 +1,16 @@
 name: "Bump Version"
 author: "Keren Dong"
-description: "Bump project(s) version"
+description: "Bump version for Kungfu projects"
 inputs:
   bump-keyword:
-    description: "Increment version(s) by semver keyword"
-    required: true
+    description: "choices [auto/verify/patch/premajor/preminor/prerelease]"
+    default: "true"
   source-ref:
-    description: "Source ref of the pull request"
+    description: "Source git ref of the pull request, e.g. dev/v1/v1.1"
+    required: true
   dest-ref:
-    description: "Dest ref of the pull request"
+    description: "Dest git ref of the pull request, e.g. alpha/v1/v1.1"
+    required: true
 runs:
   using: "node12"
   main: "dist/index.js"
