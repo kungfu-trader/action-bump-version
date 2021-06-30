@@ -83,8 +83,8 @@ async function push(cwd, keyword) {
   const pushback = {
     "premajor": async () => { },
     "preminor": async () => { },
-    "prerelease": async () => gitCall("push", "-f", "github"),
-    "patch": async () => gitCall("push", "-f", "github")
+    "prerelease": async () => gitCall("push", "-f"),
+    "patch": async () => gitCall("push", "-f")
   };
   const downstreams = {
     "premajor": ["release", "alpha", "dev"],
@@ -117,7 +117,7 @@ async function push(cwd, keyword) {
     const targetBranch = `${branchPrefix}/${branchPath}`;
     await gitCall("switch", ...switchOpts[keyword], targetBranch);
     await gitCall("reset", "--hard", upstreamBranch);
-    await gitCall("push", "-u", "-f", "github", targetBranch);
+    await gitCall("push", "-u", "-f", "origin", targetBranch);
   }
 }
 

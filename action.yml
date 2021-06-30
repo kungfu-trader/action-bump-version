@@ -11,10 +11,6 @@ inputs:
   dest-ref:
     description: "Dest git ref of the pull request, e.g. alpha/v1/v1.1"
     required: true
-  github-actor:
-    description: "GitHub actor for push"
-  github-token:
-    description: "GitHub token for push"
 runs:
   using: "node12"
   main: "dist/index.js"

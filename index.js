@@ -34,12 +34,6 @@ async function main() {
 }
 
 async function post() {
-    const actor = core.getInput('github-actor') || context.actor;
-    const token = core.getInput('github-token') || process.env.GITHUB_TOKEN;
-    console.log(`actor: ${actor}`);
-    console.log(`token: ${token}`);
-    const url = `https://${actor}:${token}@github.com/${process.env.GITHUB_REPOSITORY}`;
-    await lib.gitCall("remote", "add", "github", url);
     await lib.pushOrigin(bumpKeyword, sourceRef, destRef);
 }
 
