@@ -41,6 +41,7 @@ async function main() {
 }
 
 async function post() {
+    console.log(process.env);
     await lib.pushOrigin(bumpKeyword, sourceRef, destRef);
 }
 
