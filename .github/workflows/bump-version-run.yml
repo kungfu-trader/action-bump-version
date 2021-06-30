@@ -16,7 +16,7 @@ jobs:
 
       - name: Bump Version
         if: ${{ github.event.pull_request.merged }}
-        uses: kungfu-trader/action-bump-version@v1
+        uses: kungfu-trader/action-bump-version@v2
         with:
           bump-keyword: "auto"
           source-ref: ${{ github.head_ref}}
