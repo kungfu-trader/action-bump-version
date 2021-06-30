@@ -1,8 +1,17 @@
 const core = require('@actions/core');
+const coreCommand = require('@actions/core/lib/command');
 const github = require("@actions/github");
 const lib = require("./lib.js");
 
-try {
+const invoked = !!process.env['STATE_INVOKED'];
+
+const bumpKeyword = core.getInput('bump-keyword');
+const sourceRef = core.getInput('source-ref');
+const destRef = core.getInput('dest-ref');
+
+function main() {
+    coreCommand.issueCommand('save-state', { name: 'INVOKED' }, 'true');
+
     const context = github.context;
 
     const isPullRequest = context.eventName == "pull_request";
@@ -12,10 +21,6 @@ try {
         throw new Error("Bump version can only be triggered by pull_request or workflow_dispatch");
     }
 
-    const bumpKeyword = core.getInput('bump-keyword');
-    const sourceRef = core.getInput('source-ref');
-    const destRef = core.getInput('dest-ref');
-
     console.log(`GitHub Actor: ${context.actor}`);
 
     const setupGit = async function () {
@@ -24,11 +29,23 @@ try {
     };
 
     setupGit().then(() => {
-        lib.bumpVersion(bumpKeyword, sourceRef, destRef).catch((error) => {
-            console.error(error);
-            core.setFailed(error.message);
-        });
+        lib.bumpVersion(bumpKeyword, sourceRef, destRef);
     });
+}
+
+function post() {
+    lib.pushOrigin(bumpKeyword, sourceRef, destRef).catch((error) => {
+        console.error(error);
+        core.setFailed(error.message);
+    });
+}
+
+try {
+    if (!invoked) {
+        main();
+    } else {
+        post();
+    }
 } catch (error) {
     core.setFailed(error.message);
 }
