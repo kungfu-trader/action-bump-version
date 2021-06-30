@@ -34,9 +34,7 @@ async function main() {
 }
 
 async function post() {
-    console.log(`serverUrl: ${context.serverUrl}`);
-    console.log(`issue: ${context.issue()}`);
-    console.log(`repo: ${context.repo()}`);
+    console.log(process.env.GITHUB_REPOSITORY);
     const actor = core.getInput('github-actor') || context.actor;
     const token = core.getInput('github-token') || process.env.GITHUB_TOKEN;
     const url = process.env.GITHUB_REPOSITORY.replace("http://", `http://${actor}:${token}`);
