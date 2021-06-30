@@ -147,8 +147,8 @@ async function push(cwd, keyword) {
   const pushback = {
     "premajor": async () => { },
     "preminor": async () => { },
-    "prerelease": async () => gitCall("push"),
-    "patch": async () => gitCall("push")
+    "prerelease": async () => gitCall("push", "-f"),
+    "patch": async () => gitCall("push", "-f")
   };
   const downstreams = {
     "premajor": ["release", "alpha", "dev"],
