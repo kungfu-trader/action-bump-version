@@ -29,10 +29,7 @@ function main() {
     };
 
     setupGit().then(() => {
-        lib.bumpVersion(bumpKeyword, sourceRef, destRef).catch((error) => {
-            console.error(error);
-            core.setFailed(error.message);
-        });
+        lib.bumpVersion(bumpKeyword, sourceRef, destRef);
     });
 }
 

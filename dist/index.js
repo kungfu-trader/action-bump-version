@@ -36,10 +36,7 @@ function main() {
     };
 
     setupGit().then(() => {
-        lib.bumpVersion(bumpKeyword, sourceRef, destRef).catch((error) => {
-            console.error(error);
-            core.setFailed(error.message);
-        });
+        lib.bumpVersion(bumpKeyword, sourceRef, destRef);
     });
 }
 
@@ -185,7 +182,7 @@ async function push(cwd, keyword) {
     const targetBranch = `${branchPrefix}/${branchPath}`;
     await gitCall("switch", ...switchOpts[keyword], targetBranch);
     await gitCall("reset", "--hard", upstreamBranch);
-    await gitCall("push", "-f", "origin", targetBranch);
+    await gitCall("push", "-u", "-f", "origin", targetBranch);
   }
 }
 
