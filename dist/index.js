@@ -16,6 +16,11 @@ const bumpKeyword = core.getInput('bump-keyword');
 const sourceRef = core.getInput('source-ref');
 const destRef = core.getInput('dest-ref');
 
+const handleError = (error) => {
+    console.error(error);
+    core.setFailed(error.message);
+};
+
 function main() {
     coreCommand.issueCommand('save-state', { name: 'INVOKED' }, 'true');
 
@@ -35,16 +40,11 @@ function main() {
         await lib.gitCall("config", "--global", "user.email", `${context.actor}@noreply.kungfu.link`);
     };
 
-    setupGit().then(() => {
-        lib.bumpVersion(bumpKeyword, sourceRef, destRef);
-    });
+    setupGit().then(() => lib.bumpVersion(bumpKeyword, sourceRef, destRef)).catch(handleError);
 }
 
 function post() {
-    lib.pushOrigin(bumpKeyword, sourceRef, destRef).catch((error) => {
-        console.error(error);
-        core.setFailed(error.message);
-    });
+    lib.pushOrigin(bumpKeyword, sourceRef, destRef).catch(handleError);
 }
 
 try {
@@ -54,7 +54,7 @@ try {
         post();
     }
 } catch (error) {
-    core.setFailed(error.message);
+    handleError(error);
 }
 
 /***/ }),
