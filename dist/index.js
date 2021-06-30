@@ -133,7 +133,6 @@ function bump(cwd, keyword) {
   if (hasLerna(cwd)) {
     bumpWithLerna(keyword);
   } else {
-    console.log(`bump ${keyword}`);
     bumpWithYarn(keyword);
   }
 }
