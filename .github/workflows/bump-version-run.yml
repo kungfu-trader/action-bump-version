@@ -21,5 +21,3 @@ jobs:
           bump-keyword: "auto"
           source-ref: ${{ github.head_ref}}
           dest-ref: ${{ github.base_ref }}
-          github-actor: ${{ secrets.PUSH_ACTOR }}
-          github-token: ${{ secrets.PUSH_TOKEN }}
