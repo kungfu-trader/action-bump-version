@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Verify
-        uses: kungfu-trader/action-bump-version@v1
+        uses: kungfu-trader/action-bump-version@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           head-ref: ${{ github.head_ref}}
