@@ -32,6 +32,11 @@ exports.argv = require("yargs/yargs")(process.argv.slice(2))
         lib.setOpts(argv);
         lib.pushOrigin(argv).catch(console.error);
     })
+    .command("check", "check", (yargs) => {
+    }, (argv) => {
+        lib.setOpts(argv);
+        lib.checkStatus(argv).catch(console.error);
+    })
     .demandCommand()
     .help()
     .argv;

@@ -84,7 +84,7 @@ async function gitCall(...args) {
   console.log(output);
 }
 
-async function push(cwd, keyword) {
+async function push(cwd, keyword, argv) {
   const pushback = {
     "premajor": async () => { },
     "preminor": async () => { },
@@ -104,6 +104,37 @@ async function push(cwd, keyword) {
     "patch": []
   };
   const currentVersion = getCurrentVersion(cwd);
+
+  const octokit = github.getOctokit(argv.token);
+
+  const branchRulesQuery = await octokit.graphql(`
+          query {
+            repository(name: "${argv.repo}", owner: "${argv.owner}") {
+              branchProtectionRules(first:100) {
+                nodes {
+                  id
+                  pattern
+                  restrictsPushes
+                }
+              }
+            }
+          }`);
+  for (const rule of branchRulesQuery.repository.branchProtectionRules.nodes) {
+    const m = await octokit.graphql(`
+          mutation {
+            updateBranchProtectionRule(input: {
+              branchProtectionRuleId: "${rule.id}",
+              restrictsPushes: false
+            }) {
+              branchProtectionRule {
+                id
+                pattern
+                restrictsPushes
+              }
+            }
+          }`);
+    console.log(m);
+  }
 
   await gitCall("fetch", "--all");
   await gitCall("tag", "-f", `v${currentVersion.major}`);
@@ -127,7 +158,7 @@ async function push(cwd, keyword) {
 }
 
 const BumpActions = {
-  "auto": (cwd, headRef, baseRef) => bumpCall(cwd, getBumpKeyword(cwd, headRef, baseRef)),
+  "auto": (cwd, argv) => bumpCall(cwd, getBumpKeyword(cwd, argv.headRef, argv.baseRef)),
   "verify": verify,
   "patch": (cwd) => bumpCall(cwd, "patch"),
   "premajor": (cwd) => bumpCall(cwd, "premajor"),
@@ -136,24 +167,31 @@ const BumpActions = {
 };
 
 const PushActions = {
-  "auto": async (cwd, headRef, baseRef) => push(cwd, getBumpKeyword(cwd, headRef, baseRef)),
+  "auto": async (cwd, argv) => push(cwd, getBumpKeyword(cwd, argv.headRef, argv.baseRef), argv),
   "verify": async () => { },
-  "patch": async (cwd) => push(cwd, "patch"),
-  "premajor": async (cwd) => push(cwd, "premajor"),
-  "preminor": async (cwd) => push(cwd, "preminor"),
-  "prerelease": async (cwd) => push(cwd, "prerelease")
+  "patch": async (cwd) => push(cwd, "patch", argv),
+  "premajor": async (cwd) => push(cwd, "premajor", argv),
+  "preminor": async (cwd) => push(cwd, "preminor", argv),
+  "prerelease": async (cwd) => push(cwd, "prerelease", argv)
 };
 
 exports.gitCall = gitCall;
 
 exports.bumpVersion = function (argv) {
-  BumpActions[argv.keyword](process.cwd(), argv.headRef, argv.baseRef);
+  return BumpActions[argv.keyword](process.cwd(), argv);
 };
 
 exports.pushOrigin = function (argv) {
-  const checkAndPush = async () => {
-    const octokit = github.getOctokit(argv.token);
-    const pullRequestQuery = await octokit.graphql(`
+  return PushActions[argv.keyword](process.cwd(), argv);
+};
+
+exports.setOpts = function (argv) {
+  bumpOpts.dry = argv.dry;
+};
+
+exports.checkStatus = async (argv) => {
+  const octokit = github.getOctokit(argv.token);
+  const pullRequestQuery = await octokit.graphql(`
           query {
             repository(name: "${argv.repo}", owner: "${argv.owner}") {
               pullRequests(headRefName: "${argv.headRef}", baseRefName: "${argv.baseRef}", last: 1) {
@@ -163,12 +201,12 @@ exports.pushOrigin = function (argv) {
               }
             }
           }`);
-    const { data: pullRequest } = await octokit.rest.pulls.get({
-      owner: argv.owner,
-      repo: argv.repo,
-      pull_number: pullRequestQuery.repository.pullRequests.nodes[0].number
-    });
-    const checkRunsQuery = await octokit.graphql(`
+  const { data: pullRequest } = await octokit.rest.pulls.get({
+    owner: argv.owner,
+    repo: argv.repo,
+    pull_number: pullRequestQuery.repository.pullRequests.nodes[0].number
+  });
+  const checkRunsQuery = await octokit.graphql(`
           query {
             repository(name: "${argv.repo}", owner: "${argv.owner}") {
               pullRequest(number: ${pullRequest.number}) {
@@ -208,24 +246,17 @@ exports.pushOrigin = function (argv) {
               }
             }
           }`);
-    const commit = checkRunsQuery.repository.pullRequest.commits.nodes[0].commit;
+  const commit = checkRunsQuery.repository.pullRequest.commits.nodes[0].commit;
 
-    console.log(JSON.stringify(commit, null, 2));
+  console.log(JSON.stringify(commit, null, 2));
 
-    const checkRuns = commit.checkSuites.nodes[0].checkRuns.nodes;
-    for (const checkRun of checkRuns) {
-      console.log(`-- check run ${checkRun.name} status ${checkRun.status} conclusion ${checkRun.conclusion}`);
-      for (const step of checkRun.steps.nodes) {
-        if (step.status == "COMPLETED" && step.conclusion == "FAILURE") {
-          throw new Error(`Step ${step.number} [${step.name}] failed`);
-        }
+  const checkRuns = commit.checkSuites.nodes[0].checkRuns.nodes;
+  for (const checkRun of checkRuns) {
+    console.log(`-- check run ${checkRun.name} status ${checkRun.status} conclusion ${checkRun.conclusion}`);
+    for (const step of checkRun.steps.nodes) {
+      if (step.status == "COMPLETED" && step.conclusion == "FAILURE") {
+        throw new Error(`Step ${step.number} [${step.name}] failed`);
       }
     }
-    await PushActions[argv.keyword](process.cwd(), argv.headRef, argv.baseRef);
-  };
-  return checkAndPush();
-};
-
-exports.setOpts = function (argv) {
-  bumpOpts.dry = argv.dry;
+  }
 };
