@@ -3,7 +3,7 @@ author: "Keren Dong"
 description: "Bump version for Kungfu projects"
 inputs:
   token:
-    description: "${{ secrets.GITHUB_TOKEN }}"
+    description: "Use secrets.GITHUB_TOKEN"
     required: true
   head-ref:
     description: "Head git ref of the pull request, e.g. dev/v1/v1.1"
