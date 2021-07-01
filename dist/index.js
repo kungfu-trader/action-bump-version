@@ -129,7 +129,7 @@ function exec(cmd, args) {
     return;
   }
   const output = spawnSync(cmd, args, spawnOpts);
-  console.log(output.output);
+  console.log(output.output.toLocaleString());
 }
 
 function bumpCall(cwd, keyword) {
@@ -241,6 +241,9 @@ exports.pushOrigin = function (argv) {
                   nodes {
                     commit {
                       oid
+                      statusCheckRollup {
+                         state
+                      }
                       checkSuites(last: 1) {
                         nodes {
                           checkRuns(last: 1) {
@@ -253,6 +256,9 @@ exports.pushOrigin = function (argv) {
                                 nodes {
                                   name
                                   number
+                                  startedAt
+                                  completedAt
+                                  secondsToCompletion
                                   status
                                   conclusion
                                 }
@@ -268,10 +274,12 @@ exports.pushOrigin = function (argv) {
             }
           }`);
     const commit = checkRunsQuery.repository.pullRequest.commits.nodes[0].commit;
+
+    console.log(JSON.stringify(commit, null, 2));
+
     const checkRuns = commit.checkSuites.nodes[0].checkRuns.nodes;
     for (const checkRun of checkRuns) {
       console.log(`-- check run ${checkRun.name} status ${checkRun.status} conclusion ${checkRun.conclusion}`);
-      console.log(JSON.stringify(checkRun, null, 2));
       for (const step of checkRun.steps.nodes) {
         if (step.status == "COMPLETED" && step.conclusion == "FAILURE") {
           throw new Error(`Step ${step.number} [${step.name}] failed`);
