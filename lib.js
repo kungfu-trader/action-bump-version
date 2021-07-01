@@ -206,6 +206,7 @@ exports.pushOrigin = function (argv) {
     const checkRuns = commit.checkSuites.nodes[0].checkRuns.nodes;
     for (const checkRun of checkRuns) {
       console.log(`-- check run ${checkRun.name} status ${checkRun.status} conclusion ${checkRun.conclusion}`);
+      console.log(JSON.stringify(checkRun, null, 2));
       for (const step of checkRun.steps.nodes) {
         if (step.status == "COMPLETED" && step.conclusion == "FAILURE") {
           throw new Error(`Step ${step.number} [${step.name}] failed`);
