@@ -184,6 +184,7 @@ async function push(cwd, keyword, argv) {
               }
             }
           }`);
+  console.log(JSON.stringify(branchRulesQuery, null, 2));
   for (const rule of branchRulesQuery.repository.branchProtectionRules.nodes) {
     const m = await octokit.graphql(`
           mutation {
