@@ -13,13 +13,23 @@ const lib = __nccwpck_require__(2909);
 
 const invoked = !!process.env['STATE_INVOKED'];
 
-const bumpKeyword = core.getInput('bump-keyword');
-const sourceRef = core.getInput('head-ref');
-const destRef = core.getInput('base-ref');
+const token = core.getInput('token');
+const headRef = core.getInput('head-ref');
+const baseRef = core.getInput('base-ref');
+const keyword = core.getInput('keyword');
 
 const handleError = (error) => {
     console.error(error);
     core.setFailed(error.message);
+};
+
+const argv = {
+    token: token,
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    headRef: headRef,
+    baseRef: baseRef,
+    keyword: keyword
 };
 
 async function main() {
@@ -37,12 +47,12 @@ async function main() {
     await lib.gitCall("config", "--global", "user.name", context.actor);
     await lib.gitCall("config", "--global", "user.email", `${context.actor}@noreply.kungfu.link`);
 
-    lib.bumpVersion(bumpKeyword, sourceRef, destRef);
+    lib.bumpVersion(argv);
 }
 
 async function post() {
     console.log(process.env);
-    await lib.pushOrigin(bumpKeyword, sourceRef, destRef);
+    await lib.pushOrigin(argv);
 }
 
 const run = invoked ? post : main;
