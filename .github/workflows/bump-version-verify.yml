@@ -18,5 +18,5 @@ jobs:
         uses: kungfu-trader/action-bump-version@v1
         with:
           bump-keyword: "verify"
-          source-ref: ${{ github.head_ref}}
-          dest-ref: ${{ github.base_ref }}
+          head-ref: ${{ github.head_ref}}
+          base-ref: ${{ github.base_ref }}

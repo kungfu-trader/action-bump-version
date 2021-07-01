@@ -14,8 +14,8 @@ const lib = __nccwpck_require__(2909);
 const invoked = !!process.env['STATE_INVOKED'];
 
 const bumpKeyword = core.getInput('bump-keyword');
-const sourceRef = core.getInput('source-ref');
-const destRef = core.getInput('dest-ref');
+const sourceRef = core.getInput('head-ref');
+const destRef = core.getInput('base-ref');
 
 const handleError = (error) => {
     console.error(error);
@@ -54,12 +54,15 @@ run().catch(handleError);
 /***/ 2909:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
+const core = __nccwpck_require__(2186);
+const github = __nccwpck_require__(5438);
 const fs = __nccwpck_require__(5747);
 const path = __nccwpck_require__(5622);
 const git = __nccwpck_require__(5138);
 const semver = __nccwpck_require__(1383);
 const { spawnSync } = __nccwpck_require__(3129);
 
+const bumpOpts = { dry: false };
 const spawnOpts = { shell: true, stdio: "pipe", windowsHide: true };
 
 function hasLerna(cwd) {
@@ -72,7 +75,7 @@ function getCurrentVersion(cwd) {
   return semver.parse(config.version);
 }
 
-function getBumpKeyword(sourceRef, destRef) {
+function getBumpKeyword(cwd, headRef, baseRef) {
   const keywords = {
     "dev->alpha": "prerelease",
     "alpha->release": "patch",
@@ -80,57 +83,60 @@ function getBumpKeyword(sourceRef, destRef) {
     "main->main": "premajor"
   };
 
-  const source = sourceRef.split('/')[0];
-  const dest = destRef.split('/')[0];
+  const headMatch = headRef.match(/(\w+)\/v(\d+)\/v(\d+\.\d)/);
+  const currentVersion = getCurrentVersion(cwd);
+
+  if (!headMatch) {
+    throw new Error(`Invalid versions for head/base refs: ${headRef} -> ${baseRef}`);
+  }
+
+  if (headMatch[2] != currentVersion.major || headMatch[3] != `${currentVersion.major}.${currentVersion.minor}`) {
+    throw new Error(`The version of head ref ${headRef} does not match current ${currentVersion}`);
+  }
+
+  const source = headRef.split('/')[0];
+  const dest = baseRef.split('/')[0];
   const key = `${source}->${dest}`;
 
-  if (sourceRef.replace(source, "") !== destRef.replace(dest, "") && dest != "main") {
-    throw new Error(`Versions not match for source/dest refs: ${sourceRef} -> ${destRef}`);
+  if (headRef.replace(source, "") !== baseRef.replace(dest, "") && dest != "main") {
+    throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
   }
 
   return keywords[key];
 }
 
-function verify(cwd, sourceRef, destRef) {
-  const sourceMatch = sourceRef.match(/(\w+)\/v(\d+)\/v(\d+\.\d)/);
-  const currentVersion = getCurrentVersion(cwd);
-
-  if (!sourceMatch) {
-    throw new Error(`Invalid versions for source/dest refs: ${sourceRef} -> ${destRef}`);
-  }
-
-  if (sourceMatch[2] != currentVersion.major || sourceMatch[3] != `${currentVersion.major}.${currentVersion.minor}`) {
-    throw new Error(`The version of source ref ${sourceRef} does not match current ${currentVersion}`);
-  }
-
-  const keyword = getBumpKeyword(sourceRef, destRef);
+function verify(cwd, headRef, baseRef) {
+  const keyword = getBumpKeyword(cwd, headRef, baseRef);
 
   if (!keyword) {
-    throw new Error(`No rule to bump for source/dest refs: ${sourceRef} -> ${destRef}`);
+    throw new Error(`No rule to bump for head/base refs: ${headRef} -> ${baseRef}`);
   }
 
-  console.log(`keyword: ${keyword}`);
   return keyword;
 }
 
-function bumpWithLerna(keyword) {
-  spawnSync("lerna", ["version", `${keyword}`, "--yes", "--no-push"], spawnOpts);
+function exec(cmd, args) {
+  console.log("$", cmd, ...args);
+  if (bumpOpts.dry) {
+    return;
+  }
+  const output = spawnSync(cmd, args, spawnOpts);
+  console.log(output.output);
 }
 
-function bumpWithYarn(keyword) {
-  spawnSync("yarn", ["version", `--${keyword}`, "--preid", "alpha"], spawnOpts);
-}
-
-function bump(cwd, keyword) {
+function bumpCall(cwd, keyword) {
   if (hasLerna(cwd)) {
-    bumpWithLerna(keyword);
+    exec("lerna", ["version", `${keyword}`, "--yes", "--no-push"]);
   } else {
-    bumpWithYarn(keyword);
+    exec("yarn", ["version", `--${keyword}`, "--preid", "alpha"]);
   }
 }
 
 async function gitCall(...args) {
   console.log("$ git", ...args);
+  if (bumpOpts.dry) {
+    return;
+  }
   const output = await git(...args);
   console.log(output);
 }
@@ -178,16 +184,16 @@ async function push(cwd, keyword) {
 }
 
 const BumpActions = {
-  "auto": (cwd, sourceRef, destRef) => bump(cwd, getBumpKeyword(sourceRef, destRef)),
+  "auto": (cwd, headRef, baseRef) => bumpCall(cwd, getBumpKeyword(cwd, headRef, baseRef)),
   "verify": verify,
-  "patch": (cwd) => bump(cwd, "patch"),
-  "premajor": (cwd) => bump(cwd, "premajor"),
-  "preminor": (cwd) => bump(cwd, "preminor"),
-  "prerelease": (cwd) => bump(cwd, "prerelease")
+  "patch": (cwd) => bumpCall(cwd, "patch"),
+  "premajor": (cwd) => bumpCall(cwd, "premajor"),
+  "preminor": (cwd) => bumpCall(cwd, "preminor"),
+  "prerelease": (cwd) => bumpCall(cwd, "prerelease")
 };
 
 const PushActions = {
-  "auto": async (cwd, sourceRef, destRef) => push(cwd, getBumpKeyword(sourceRef, destRef)),
+  "auto": async (cwd, headRef, baseRef) => push(cwd, getBumpKeyword(cwd, headRef, baseRef)),
   "verify": async () => { },
   "patch": async (cwd) => push(cwd, "patch"),
   "premajor": async (cwd) => push(cwd, "premajor"),
@@ -197,12 +203,79 @@ const PushActions = {
 
 exports.gitCall = gitCall;
 
-exports.bumpVersion = function (bumpKeyword, sourceRef, destRef) {
-  BumpActions[bumpKeyword](process.cwd(), sourceRef, destRef);
+exports.bumpVersion = function (argv) {
+  BumpActions[argv.keyword](process.cwd(), argv.headRef, argv.baseRef);
 };
 
-exports.pushOrigin = function (bumpKeyword, sourceRef, destRef) {
-  return PushActions[bumpKeyword](process.cwd(), sourceRef, destRef);
+exports.pushOrigin = function (argv) {
+  const checkAndPush = async () => {
+    const octokit = github.getOctokit(argv.token);
+    const pullRequestQuery = await octokit.graphql(`
+          query {
+            repository(name: "${argv.repo}", owner: "${argv.owner}") {
+              pullRequests(headRefName: "${argv.headRef}", baseRefName: "${argv.baseRef}", last: 1) {
+                nodes {
+                  number
+                }
+              }
+            }
+          }`);
+    const { data: pullRequest } = await octokit.rest.pulls.get({
+      owner: argv.owner,
+      repo: argv.repo,
+      pull_number: pullRequestQuery.repository.pullRequests.nodes[0].number
+    });
+    const checkRunsQuery = await octokit.graphql(`
+          query {
+            repository(name: "${argv.repo}", owner: "${argv.owner}") {
+              pullRequest(number: ${pullRequest.number}) {
+                commits(last: 1) {
+                  nodes {
+                    commit {
+                      oid
+                      checkSuites(last: 1) {
+                        nodes {
+                          checkRuns(last: 1) {
+                            nodes {
+                              id
+                              name
+                              conclusion
+                              status
+                              steps(first: 100) {
+                                nodes {
+                                  name
+                                  number
+                                  status
+                                  conclusion
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }`);
+    const commit = checkRunsQuery.repository.pullRequest.commits.nodes[0].commit;
+    const checkRuns = commit.checkSuites.nodes[0].checkRuns.nodes;
+    for (const checkRun of checkRuns) {
+      console.log(`-- check run ${checkRun.name} status ${checkRun.status} conclusion ${checkRun.conclusion}`);
+      for (const step of checkRun.steps.nodes) {
+        if (step.status == "COMPLETED" && step.conclusion == "FAILURE") {
+          throw new Error(`Step ${step.number} [${step.name}] failed`);
+        }
+      }
+    }
+    await PushActions[argv.keyword](process.cwd(), argv.headRef, argv.baseRef);
+  };
+  return checkAndPush();
+};
+
+exports.setOpts = function (argv) {
+  bumpOpts.dry = argv.dry;
 };
 
 /***/ }),

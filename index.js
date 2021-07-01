@@ -7,8 +7,8 @@ const lib = require("./lib.js");
 const invoked = !!process.env['STATE_INVOKED'];
 
 const bumpKeyword = core.getInput('bump-keyword');
-const sourceRef = core.getInput('source-ref');
-const destRef = core.getInput('dest-ref');
+const sourceRef = core.getInput('head-ref');
+const destRef = core.getInput('base-ref');
 
 const handleError = (error) => {
     console.error(error);
