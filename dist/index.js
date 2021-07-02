@@ -118,7 +118,7 @@ function exec(cmd, args) {
     return;
   }
   const output = spawnSync(cmd, args, spawnOpts).output;
-  console.log(output.toString());
+  process.stdout.write(output);
 }
 
 function bumpCall(keyword, argv) {
@@ -172,9 +172,10 @@ async function mergeCall(keyword, argv) {
       owner: argv.owner,
       repo: argv.repo,
       base: branch.ref,
-      head: tagMajorRef.object.sha
+      head: tagMajorRef.object.sha,
+      commit_message: `Merge version ${version} into ${branchRef}`
     });
-    console.log(merge);
+    console.log(`-- merged with status ${merge.status}`);
   };
 
   const mergeTargets = {
