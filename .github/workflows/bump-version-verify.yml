@@ -20,4 +20,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           head-ref: ${{ github.head_ref}}
           base-ref: ${{ github.base_ref }}
-          keyword: "verify"
+          action: "verify"
