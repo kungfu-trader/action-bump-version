@@ -32,13 +32,13 @@ async function bump() {
 const run = {
     "auto": async () => {
         await bump();
-        await lib.mergeOrigin(argv);
+        await lib.mergeUpstream(argv);
     },
     "bump": async () => {
         await bump();
     },
     "publish": async () => {
-        await lib.mergeOrigin(argv);
+        await lib.mergeUpstream(argv);
     },
     "verify": async () => {
         lib.verify(argv);
