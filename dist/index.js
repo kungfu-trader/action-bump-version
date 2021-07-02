@@ -84,30 +84,38 @@ function getCurrentVersion(cwd) {
 }
 
 function getBumpKeyword(cwd, headRef, baseRef) {
+  const version = getCurrentVersion(cwd);
+  const headChannel = headRef.split('/')[0];
+  const baseChannel = baseRef.split('/')[0];
   const keywords = {
     "dev->alpha": "prerelease",
     "alpha->release": "patch",
     "release->main": "preminor",
     "main->main": "premajor"
   };
+  const key = `${headChannel}->${baseChannel}`;
+  const lastMinor = Number(`${version.major}.${version.minor}`) - 0.1;
+
+  if (headRef.replace(headChannel, "") !== baseRef.replace(baseChannel, "") && baseChannel != "main") {
+    throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
+  }
+
+  if (headChannel == "main") {
+    return keywords[key];
+  }
 
   const headMatch = headRef.match(/(\w+)\/v(\d+)\/v(\d+\.\d)/);
-  const currentVersion = getCurrentVersion(cwd);
 
   if (!headMatch) {
     throw new Error(`Invalid versions for head/base refs: ${headRef} -> ${baseRef}`);
   }
 
-  if (headMatch[2] != currentVersion.major || headMatch[3] != `${currentVersion.major}.${currentVersion.minor}`) {
-    throw new Error(`The version of head ref ${headRef} does not match current ${currentVersion}`);
+  if (headMatch[2] == version.major && headMatch[3] == lastMinor && baseChannel == "main") {
+    return keywords[key];
   }
 
-  const source = headRef.split('/')[0];
-  const dest = baseRef.split('/')[0];
-  const key = `${source}->${dest}`;
-
-  if (headRef.replace(source, "") !== baseRef.replace(dest, "") && dest != "main") {
-    throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
+  if ((headMatch[2] != version.major || headMatch[3] != `${version.major}.${version.minor}`) && baseChannel != "main") {
+    throw new Error(`The version of head ref ${headRef} does not match current ${version}`);
   }
 
   return keywords[key];
