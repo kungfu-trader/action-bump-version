@@ -54,7 +54,7 @@ function exec(cmd, args) {
     return;
   }
   const output = spawnSync(cmd, args, spawnOpts).output;
-  process.stdout.write(output);
+  console.log(output.toString());
 }
 
 function bumpCall(keyword, argv) {
