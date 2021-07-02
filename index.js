@@ -1,51 +1,51 @@
 const core = require('@actions/core');
-const coreCommand = require('@actions/core/lib/command');
-const github = require("@actions/github");
+const { context } = require("@actions/github");
 const lib = require("./lib.js");
 
-const invoked = !!process.env['STATE_INVOKED'];
-
-const bumpKeyword = core.getInput('bump-keyword');
-const sourceRef = core.getInput('source-ref');
-const destRef = core.getInput('dest-ref');
+const action = core.getInput('action');
+const token = core.getInput('token');
+const headRef = core.getInput('head-ref');
+const baseRef = core.getInput('base-ref');
+const keyword = core.getInput('keyword');
 
 const handleError = (error) => {
     console.error(error);
     core.setFailed(error.message);
 };
 
-function main() {
-    coreCommand.issueCommand('save-state', { name: 'INVOKED' }, 'true');
+const argv = {
+    cwd: process.cwd(),
+    token: token,
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    headRef: headRef,
+    baseRef: baseRef,
+    keyword: keyword
+};
 
-    const context = github.context;
+async function bump() {
+    await lib.gitCall("config", "--global", "user.name", context.actor);
+    await lib.gitCall("config", "--global", "user.email", `${context.actor}@users.noreply.github.com`);
+    lib.bumpVersion(argv);
+}
 
-    const isPullRequest = context.eventName == "pull_request";
-    const isManualTrigger = context.eventName == "workflow_dispatch";
-
-    if (!isPullRequest && !isManualTrigger) {
-        throw new Error("Bump version can only be triggered by pull_request or workflow_dispatch");
+const run = {
+    "auto": async () => {
+        await bump();
+        await lib.mergeUpstream(argv);
+    },
+    "bump": async () => {
+        await bump();
+    },
+    "publish": async () => {
+        await lib.mergeUpstream(argv);
+    },
+    "verify": async () => {
+        lib.verify(argv);
+    },
+    "protect": async () => {
+        await lib.protectBranches(argv);
     }
+};
 
-    console.log(`GitHub Actor: ${context.actor}`);
-
-    const setupGit = async function () {
-        await lib.gitCall("config", "--global", "user.name", context.actor);
-        await lib.gitCall("config", "--global", "user.email", `${context.actor}@noreply.kungfu.link`);
-    };
-
-    setupGit().then(() => lib.bumpVersion(bumpKeyword, sourceRef, destRef)).catch(handleError);
-}
-
-function post() {
-    lib.pushOrigin(bumpKeyword, sourceRef, destRef).catch(handleError);
-}
-
-try {
-    if (!invoked) {
-        main();
-    } else {
-        post();
-    }
-} catch (error) {
-    handleError(error);
-}
+run[action]().catch(handleError);

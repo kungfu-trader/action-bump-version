@@ -1,15 +1,22 @@
 name: "Bump Version"
 author: "Keren Dong"
-description: "Bump project(s) version"
+description: "Bump version for Kungfu projects"
 inputs:
-  bump-keyword:
-    description: "Increment version(s) by semver keyword"
+  token:
+    description: "Use secrets.GITHUB_TOKEN"
     required: true
-  source-ref:
-    description: "Source ref of the pull request"
-  dest-ref:
-    description: "Dest ref of the pull request"
+  head-ref:
+    description: "Head git ref of the pull request, e.g. dev/v1/v1.1"
+    required: true
+  base-ref:
+    description: "Base git ref of the pull request, e.g. alpha/v1/v1.1"
+    required: true
+  keyword:
+    description: "choices [auto/patch/premajor/preminor/prerelease]"
+    default: "auto"
+  action:
+    description: "choices [auto/bump/publish/verify/protect]"
+    default: "auto"
 runs:
   using: "node12"
   main: "dist/index.js"
-  post: "dist/index.js"
