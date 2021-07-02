@@ -1,5 +1,6 @@
 const github = require("@actions/github");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const git = require('git-client');
 const semver = require('semver');
@@ -98,7 +99,7 @@ async function mergeCall(keyword, argv) {
   });
 
   const mergeRemoteChannel = async (branchRef) => {
-    console.log(`-- merging to origin: ${branchRef}`);
+    console.log(`> merge into ${argv.repo} ${branchRef}`);
     if (bumpOpts.dry) {
       return;
     }
@@ -131,6 +132,8 @@ async function mergeCall(keyword, argv) {
     "patch": ["alpha", "dev"],
     "prerelease": ["dev"]
   };
+
+  console.log(`${os.EOL}# https://docs.github.com/en/rest/reference/repos#merge-a-branch${os.EOL}`);
   for (const channel of mergeTargets[keyword]) {
     await mergeRemoteChannel(`${channel}/v${version.major}/v${version.major}.${version.minor}`);
   }
