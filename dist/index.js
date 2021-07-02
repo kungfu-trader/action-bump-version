@@ -239,7 +239,6 @@ exports.protectBranches = async (argv) => {
   //         }`);
   //   console.log(m);
   // }
-
   const protection = await octokit.rest.repos.updateBranchProtection({
     owner: argv.owner,
     repo: argv.repo,
@@ -252,78 +251,6 @@ exports.protectBranches = async (argv) => {
     restrictions: null
   });
   console.log(protection);
-};
-
-exports.checkStatus = async (argv) => {
-  const octokit = github.getOctokit(argv.token);
-  const pullRequestQuery = await octokit.graphql(`
-          query {
-            repository(name: "${argv.repo}", owner: "${argv.owner}") {
-              pullRequests(headRefName: "${argv.headRef}", baseRefName: "${argv.baseRef}", last: 1) {
-                nodes {
-                  number
-                }
-              }
-            }
-          }`);
-  const { data: pullRequest } = await octokit.rest.pulls.get({
-    owner: argv.owner,
-    repo: argv.repo,
-    pull_number: pullRequestQuery.repository.pullRequests.nodes[0].number
-  });
-  const checkRunsQuery = await octokit.graphql(`
-          query {
-            repository(name: "${argv.repo}", owner: "${argv.owner}") {
-              pullRequest(number: ${pullRequest.number}) {
-                commits(last: 1) {
-                  nodes {
-                    commit {
-                      oid
-                      statusCheckRollup {
-                         state
-                      }
-                      checkSuites(last: 1) {
-                        nodes {
-                          checkRuns(last: 1) {
-                            nodes {
-                              id
-                              name
-                              conclusion
-                              status
-                              steps(first: 100) {
-                                nodes {
-                                  name
-                                  number
-                                  startedAt
-                                  completedAt
-                                  secondsToCompletion
-                                  status
-                                  conclusion
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }`);
-  const commit = checkRunsQuery.repository.pullRequest.commits.nodes[0].commit;
-
-  console.log(JSON.stringify(commit, null, 2));
-
-  const checkRuns = commit.checkSuites.nodes[0].checkRuns.nodes;
-  for (const checkRun of checkRuns) {
-    console.log(`-- check run ${checkRun.name} status ${checkRun.status} conclusion ${checkRun.conclusion}`);
-    for (const step of checkRun.steps.nodes) {
-      if (step.status == "COMPLETED" && step.conclusion == "FAILURE") {
-        throw new Error(`Step ${step.number} [${step.name}] failed`);
-      }
-    }
-  }
 };
 
 /***/ }),
