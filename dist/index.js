@@ -37,7 +37,7 @@ async function bump() {
 }
 
 const run = {
-    "auto": bump().then(() => lib.mergeOrigin(argv)),
+    "auto": () => bump().then(() => lib.mergeOrigin(argv)),
     "bump": bump,
     "publish": async () => lib.mergeOrigin(argv),
     "verify": async () => lib.verify(argv),
