@@ -189,7 +189,7 @@ async function mergeCall(keyword, argv) {
 }
 
 const BumpActions = {
-  "auto": (argv) => bumpCall(getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef)),
+  "auto": (argv) => bumpCall(getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef), argv),
   "patch": (argv) => bumpCall("patch", argv),
   "premajor": (argv) => bumpCall("premajor", argv),
   "preminor": (argv) => bumpCall("preminor", argv),
