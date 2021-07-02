@@ -192,7 +192,7 @@ async function mergeCall(keyword, argv) {
       head: latestRef.object.sha,
       commit_message: `Merge version ${version} into ${branchRef}`
     });
-    if (merge.status != 201) {
+    if (merge.status != 201 && merge.status != 204) {
       console.error(merge);
       throw new Error(`Merge failed with status ${merge.status}`);
     }
