@@ -48,27 +48,17 @@ function getBumpKeyword(cwd, headRef, baseRef) {
   return keywords[key];
 }
 
-function verify(cwd, headRef, baseRef) {
-  const keyword = getBumpKeyword(cwd, headRef, baseRef);
-
-  if (!keyword) {
-    throw new Error(`No rule to bump for head/base refs: ${headRef} -> ${baseRef}`);
-  }
-
-  return keyword;
-}
-
 function exec(cmd, args) {
   console.log("$", cmd, ...args);
   if (bumpOpts.dry) {
     return;
   }
-  const output = spawnSync(cmd, args, spawnOpts);
-  console.log(output.output.toLocaleString());
+  const output = spawnSync(cmd, args, spawnOpts).output;
+  console.log(output.toString());
 }
 
-function bumpCall(cwd, keyword) {
-  if (hasLerna(cwd)) {
+function bumpCall(keyword, argv) {
+  if (hasLerna(argv.cwd)) {
     exec("lerna", ["version", `${keyword}`, "--yes", "--no-push"]);
   } else {
     exec("yarn", ["version", `--${keyword}`, "--preid", "alpha"]);
@@ -84,110 +74,120 @@ async function gitCall(...args) {
   console.log(output);
 }
 
-async function push(cwd, keyword, argv) {
-  const pushback = {
-    "premajor": async () => { },
-    "preminor": async () => { },
-    "prerelease": async () => gitCall("push", "-f"),
-    "patch": async () => gitCall("push", "-f")
-  };
-  const downstreams = {
-    "premajor": ["release", "alpha", "dev"],
-    "preminor": ["release", "alpha", "dev"],
-    "prerelease": ["dev"],
-    "patch": ["alpha", "dev"]
-  };
-  const switchOpts = {
-    "premajor": ["-c"],
-    "preminor": ["-c"],
-    "prerelease": [],
-    "patch": []
-  };
-  const currentVersion = getCurrentVersion(cwd);
+async function mergeCall(keyword, argv) {
+  const version = getCurrentVersion(argv.cwd);
+
+  await gitCall("tag", "-f", `v${version.major}`);
+  await gitCall("tag", "-f", `v${version.major}.${version.minor}`);
+  await gitCall("push", "-f", "--tags");
 
   const octokit = github.getOctokit(argv.token);
 
-  const branchRulesQuery = await octokit.graphql(`
-          query {
-            repository(name: "${argv.repo}", owner: "${argv.owner}") {
-              branchProtectionRules(first:100) {
-                nodes {
-                  id
-                  pattern
-                  restrictsPushes
-                }
-              }
-            }
-          }`);
-  console.log(JSON.stringify(branchRulesQuery, null, 2));
-  for (const rule of branchRulesQuery.repository.branchProtectionRules.nodes) {
-    const m = await octokit.graphql(`
-          mutation {
-            updateBranchProtectionRule(input: {
-              branchProtectionRuleId: "${rule.id}",
-              restrictsPushes: false
-            }) {
-              branchProtectionRule {
-                id
-                pattern
-                restrictsPushes
-              }
-            }
-          }`);
-    console.log(m);
-  }
+  const { data: tagMajorRef } = await octokit.rest.git.getRef({
+    owner: argv.owner,
+    repo: argv.repo,
+    ref: `tags/v${version.major}`
+  });
 
-  await gitCall("fetch", "--all");
-  await gitCall("tag", "-f", `v${currentVersion.major}`);
-  await gitCall("tag", "-f", `v${currentVersion.major}.${currentVersion.minor}`);
-  await gitCall("push", "-f", "--tags");
-  await pushback[keyword]();
-
-  const branchPath = `v${currentVersion.major}/v${currentVersion.major}.${currentVersion.minor}`;
-  const upstreams = {
-    "release": "main",
-    "alpha": `release/${branchPath}`,
-    "dev": `alpha/${branchPath}`
+  const mergeRemote = async (branchRef) => {
+    console.log(`-- merging to origin: ${branchRef}`);
+    if (bumpOpts.dry) {
+      return;
+    }
+    const { data: branch } = await octokit.rest.git.getRef({
+      owner: argv.owner,
+      repo: argv.repo,
+      ref: `heads/${branchRef}`
+    }).catch(() => octokit.rest.git.createRef({
+      owner: argv.owner,
+      repo: argv.repo,
+      ref: `refs/heads/${branchRef}`,
+      sha: tagMajorRef.object.sha
+    }));
+    const merge = await octokit.rest.repos.merge({
+      owner: argv.owner,
+      repo: argv.repo,
+      base: branch.ref,
+      head: tagMajorRef.object.sha
+    });
+    console.log(merge);
   };
-  for (const branchPrefix of downstreams[keyword]) {
-    const upstreamBranch = upstreams[branchPrefix];
-    const targetBranch = `${branchPrefix}/${branchPath}`;
-    await gitCall("switch", ...switchOpts[keyword], targetBranch);
-    await gitCall("reset", "--hard", upstreamBranch);
-    await gitCall("push", "-u", "-f", "origin", targetBranch);
+
+  const mergeTargets = {
+    "premajor": ["release", "alpha", "dev"],
+    "preminor": ["release", "alpha", "dev"],
+    "patch": ["release", "alpha", "dev"],
+    "prerelease": ["alpha", "dev"]
+  };
+  for (const stream of mergeTargets[keyword]) {
+    await mergeRemote(`${stream}/v${version.major}/v${version.major}.${version.minor}`);
   }
 }
 
 const BumpActions = {
-  "auto": (cwd, argv) => bumpCall(cwd, getBumpKeyword(cwd, argv.headRef, argv.baseRef)),
-  "verify": verify,
-  "patch": (cwd) => bumpCall(cwd, "patch"),
-  "premajor": (cwd) => bumpCall(cwd, "premajor"),
-  "preminor": (cwd) => bumpCall(cwd, "preminor"),
-  "prerelease": (cwd) => bumpCall(cwd, "prerelease")
+  "auto": (argv) => bumpCall(getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef)),
+  "patch": (argv) => bumpCall("patch", argv),
+  "premajor": (argv) => bumpCall("premajor", argv),
+  "preminor": (argv) => bumpCall("preminor", argv),
+  "prerelease": (argv) => bumpCall("prerelease", argv)
 };
 
-const PushActions = {
-  "auto": async (cwd, argv) => push(cwd, getBumpKeyword(cwd, argv.headRef, argv.baseRef), argv),
-  "verify": async () => { },
-  "patch": async (cwd) => push(cwd, "patch", argv),
-  "premajor": async (cwd) => push(cwd, "premajor", argv),
-  "preminor": async (cwd) => push(cwd, "preminor", argv),
-  "prerelease": async (cwd) => push(cwd, "prerelease", argv)
+const MergeActions = {
+  "auto": async (argv) => mergeCall(getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef), argv),
+  "patch": async (argv) => mergeCall("patch", argv),
+  "premajor": async (argv) => mergeCall("premajor", argv),
+  "preminor": async (argv) => mergeCall("preminor", argv),
+  "prerelease": async (argv) => mergeCall("prerelease", argv)
 };
 
 exports.gitCall = gitCall;
 
-exports.bumpVersion = function (argv) {
-  return BumpActions[argv.keyword](process.cwd(), argv);
-};
-
-exports.pushOrigin = function (argv) {
-  return PushActions[argv.keyword](process.cwd(), argv);
-};
-
 exports.setOpts = function (argv) {
   bumpOpts.dry = argv.dry;
+};
+
+exports.bumpVersion = (argv) => BumpActions[argv.keyword](argv);
+
+exports.mergeOrigin = (argv) => MergeActions[argv.keyword](argv);
+
+exports.verify = (argv) => {
+  const keyword = getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef);
+  if (!keyword) {
+    throw new Error(`No rule to bump for head/base refs: ${argv.headRef} -> ${argv.baseRef}`);
+  }
+  return keyword;
+};
+
+exports.protectBranches = async (argv) => {
+  // for (const rule of branchRulesQuery.repository.branchProtectionRules.nodes) {
+  //   const m = await octokit.graphql(`
+  //         mutation {
+  //           updateBranchProtectionRule(input: {
+  //             branchProtectionRuleId: "${rule.id}",
+  //             restrictsPushes: false
+  //           }) {
+  //             branchProtectionRule {
+  //               id
+  //               pattern
+  //               restrictsPushes
+  //             }
+  //           }1
+  //         }`);
+  //   console.log(m);
+  // }
+
+  const protection = await octokit.rest.repos.updateBranchProtection({
+    owner: argv.owner,
+    repo: argv.repo,
+    branch: "dev/v1/v1.1",
+    allow_force_pushes: false,
+    allow_deletions: false,
+    enforce_admins: true,
+    required_pull_request_reviews: true,
+    required_status_checks: null,
+    restrictions: null
+  });
+  console.log(protection);
 };
 
 exports.checkStatus = async (argv) => {

@@ -12,9 +12,11 @@ inputs:
     description: "Base git ref of the pull request, e.g. alpha/v1/v1.1"
     required: true
   keyword:
-    description: "choices [auto/verify/patch/premajor/preminor/prerelease]"
+    description: "choices [auto/patch/premajor/preminor/prerelease]"
+    default: "auto"
+  action:
+    description: "choices [auto/bump/publish/verify/protect]"
     default: "auto"
 runs:
   using: "node12"
   main: "dist/index.js"
-  post: "dist/index.js"
