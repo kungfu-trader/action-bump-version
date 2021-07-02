@@ -48,7 +48,7 @@ const run = {
         await lib.mergeOrigin(argv);
     },
     "verify": async () => {
-        await lib.verify(argv);
+        lib.verify(argv);
     },
     "protect": async () => {
         await lib.protectBranches(argv);
