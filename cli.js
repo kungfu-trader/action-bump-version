@@ -1,26 +1,48 @@
+const { boolean } = require("yargs");
 const lib = require("./lib.js");
 
-const argv = require("yargs/yargs")(process.argv.slice(2))
-    .option("bump-keyword", {
-        description: "Increment version(s) by semver keyword",
-        type: "string",
-        choices: ["auto", "patch", "premajor", "preminor", "prerelease", "verify"]
+const keywords = ["auto", "patch", "premajor", "preminor", "prerelease", "verify"];
+
+exports.argv = require("yargs/yargs")(process.argv.slice(2))
+    .option("cwd", { type: "string", default: process.cwd() })
+    .option("token", { type: "string", demandOption: true })
+    .option("base-ref", { type: "string", demandOption: true })
+    .option("head-ref", { type: "string", demandOption: true })
+    .option("owner", { type: "string", default: "kungfu-trader" })
+    .option("repo", { type: "string", default: "action-bump-version" })
+    .option("dry", { type: boolean })
+    .command("bump <keyword>", "bump", (yargs) => {
+        yargs.positional("keyword", {
+            description: "Increment version(s) by semver keyword",
+            type: "string",
+            choices: keywords,
+            demandOption: true
+        });
+    }, (argv) => {
+        lib.setOpts(argv);
+        lib.bumpVersion(argv);
     })
-    .option("source-ref", {
-        description: "Source git ref",
-        type: "string"
+    .command("publish <keyword>", "publish", (yargs) => {
+        yargs.positional("keyword", {
+            description: "Increment version(s) by semver keyword",
+            type: "string",
+            choices: keywords,
+            demandOption: true
+        });
+    }, (argv) => {
+        lib.setOpts(argv);
+        lib.mergeOrigin(argv).catch(console.error);
     })
-    .option("dest-ref", {
-        description: "Dest git ref",
-        type: "string"
+    .command("verify", "verify", (yargs) => {
+    }, (argv) => {
+        lib.setOpts(argv);
+        lib.verify(argv);
     })
-    .demandOption(["bump-keyword", "source-ref", "dest-ref"])
+    .command("protect", "protect", (yargs) => {
+    }, (argv) => {
+        lib.setOpts(argv);
+        lib.protectBranches(argv).catch(console.error);
+    })
+    .demandCommand()
     .help()
     .argv;
-
-
-console.log("-- bump --");
-lib.bumpVersion(argv["bump-keyword"], argv["source-ref"], argv["dest-ref"]);
-
-console.log("-- push --");
-lib.pushOrigin(argv["bump-keyword"], argv["source-ref"], argv["dest-ref"]).catch(console.error);

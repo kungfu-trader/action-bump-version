@@ -18,6 +18,6 @@ jobs:
         if: ${{ github.event.pull_request.merged }}
         uses: kungfu-trader/action-bump-version@v2
         with:
-          bump-keyword: "auto"
-          source-ref: ${{ github.head_ref}}
-          dest-ref: ${{ github.base_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          head-ref: ${{ github.head_ref}}
+          base-ref: ${{ github.base_ref }}
