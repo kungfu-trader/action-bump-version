@@ -30,13 +30,22 @@ async function bump() {
 }
 
 const run = {
-    "auto": () => bump().then(() => lib.mergeOrigin(argv)),
-    "bump": bump,
-    "publish": async () => lib.mergeOrigin(argv),
-    "verify": async () => lib.verify(argv),
-    "protect": async () => lib.protectBranches(argv)
+    "auto": async () => {
+        await bump();
+        await lib.mergeOrigin(argv);
+    },
+    "bump": async () => {
+        await bump();
+    },
+    "publish": async () => {
+        await lib.mergeOrigin(argv);
+    },
+    "verify": async () => {
+        await lib.verify(argv);
+    },
+    "protect": async () => {
+        await lib.protectBranches(argv);
+    }
 };
-
-console.log(`run action ${action}`);
 
 run[action]().catch(handleError);
