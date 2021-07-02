@@ -32,7 +32,7 @@ const argv = {
 
 async function bump() {
     await lib.gitCall("config", "--global", "user.name", context.actor);
-    await lib.gitCall("config", "--global", "user.email", `${context.actor}@noreply.github.com`);
+    await lib.gitCall("config", "--global", "user.email", `${context.actor}@users.noreply.github.com`);
     lib.bumpVersion(argv);
 }
 
@@ -178,11 +178,19 @@ async function mergeCall(keyword, argv) {
     console.log(`-- merged with status ${merge.status}`);
   };
 
+  const pushback = {
+    "premajor": () => { },
+    "preminor": () => { },
+    "patch": () => gitCall("push"),
+    "prerelease": () => gitCall("push")
+  };
+  pushback[keyword]();
+
   const mergeTargets = {
     "premajor": ["release", "alpha", "dev"],
     "preminor": ["release", "alpha", "dev"],
-    "patch": ["release", "alpha", "dev"],
-    "prerelease": ["alpha", "dev"]
+    "patch": ["alpha", "dev"],
+    "prerelease": ["dev"]
   };
   for (const stream of mergeTargets[keyword]) {
     await mergeRemote(`${stream}/v${version.major}/v${version.major}.${version.minor}`);

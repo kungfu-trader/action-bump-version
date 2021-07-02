@@ -25,7 +25,7 @@ const argv = {
 
 async function bump() {
     await lib.gitCall("config", "--global", "user.name", context.actor);
-    await lib.gitCall("config", "--global", "user.email", `${context.actor}@noreply.github.com`);
+    await lib.gitCall("config", "--global", "user.email", `${context.actor}@users.noreply.github.com`);
     lib.bumpVersion(argv);
 }
 
