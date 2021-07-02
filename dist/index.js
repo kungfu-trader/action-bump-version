@@ -64,6 +64,7 @@ run[action]().catch(handleError);
 
 const github = __nccwpck_require__(5438);
 const fs = __nccwpck_require__(5747);
+const os = __nccwpck_require__(2087);
 const path = __nccwpck_require__(5622);
 const git = __nccwpck_require__(5138);
 const semver = __nccwpck_require__(1383);
@@ -162,7 +163,7 @@ async function mergeCall(keyword, argv) {
   });
 
   const mergeRemoteChannel = async (branchRef) => {
-    console.log(`-- merging to origin: ${branchRef}`);
+    console.log(`> merge into ${argv.repo} ${branchRef}`);
     if (bumpOpts.dry) {
       return;
     }
@@ -195,6 +196,8 @@ async function mergeCall(keyword, argv) {
     "patch": ["alpha", "dev"],
     "prerelease": ["dev"]
   };
+
+  console.log(`${os.EOL}# https://docs.github.com/en/rest/reference/repos#merge-a-branch${os.EOL}`);
   for (const channel of mergeTargets[keyword]) {
     await mergeRemoteChannel(`${channel}/v${version.major}/v${version.major}.${version.minor}`);
   }
