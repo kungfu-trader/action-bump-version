@@ -32,9 +32,11 @@ async function bump() {
 const run = {
     "auto": bump().then(() => lib.mergeOrigin(argv)),
     "bump": bump,
-    "publish": () => lib.mergeOrigin(argv),
+    "publish": async () => lib.mergeOrigin(argv),
     "verify": async () => lib.verify(argv),
-    "protect": () => lib.protectBranches(argv)
+    "protect": async () => lib.protectBranches(argv)
 };
+
+console.log(`run action ${action}`);
 
 run[action]().catch(handleError);
