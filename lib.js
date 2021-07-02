@@ -1,5 +1,6 @@
 const github = require("@actions/github");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const git = require('git-client');
 const semver = require('semver');
@@ -81,16 +82,24 @@ async function mergeCall(keyword, argv) {
   await gitCall("tag", "-f", `v${version.major}.${version.minor}`);
   await gitCall("push", "-f", "--tags");
 
+  const pushback = {
+    "premajor": () => { },
+    "preminor": () => { },
+    "patch": () => gitCall("push"),
+    "prerelease": () => gitCall("push")
+  };
+  pushback[keyword]();
+
   const octokit = github.getOctokit(argv.token);
 
-  const { data: tagMajorRef } = await octokit.rest.git.getRef({
+  const { data: latestRef } = await octokit.rest.git.getRef({
     owner: argv.owner,
     repo: argv.repo,
     ref: `tags/v${version.major}`
   });
 
-  const mergeRemote = async (branchRef) => {
-    console.log(`-- merging to origin: ${branchRef}`);
+  const mergeRemoteChannel = async (branchRef) => {
+    console.log(`> merge into ${argv.repo} ${branchRef}`);
     if (bumpOpts.dry) {
       return;
     }
@@ -102,26 +111,31 @@ async function mergeCall(keyword, argv) {
       owner: argv.owner,
       repo: argv.repo,
       ref: `refs/heads/${branchRef}`,
-      sha: tagMajorRef.object.sha
+      sha: latestRef.object.sha
     }));
     const merge = await octokit.rest.repos.merge({
       owner: argv.owner,
       repo: argv.repo,
       base: branch.ref,
-      head: tagMajorRef.object.sha,
+      head: latestRef.object.sha,
       commit_message: `Merge version ${version} into ${branchRef}`
     });
-    console.log(`-- merged with status ${merge.status}`);
+    if (merge.status != 201) {
+      console.error(merge);
+      throw new Error(`Merge failed with status ${merge.status}`);
+    }
   };
 
   const mergeTargets = {
     "premajor": ["release", "alpha", "dev"],
     "preminor": ["release", "alpha", "dev"],
-    "patch": ["release", "alpha", "dev"],
-    "prerelease": ["alpha", "dev"]
+    "patch": ["alpha", "dev"],
+    "prerelease": ["dev"]
   };
-  for (const stream of mergeTargets[keyword]) {
-    await mergeRemote(`${stream}/v${version.major}/v${version.major}.${version.minor}`);
+
+  console.log(`${os.EOL}# https://docs.github.com/en/rest/reference/repos#merge-a-branch${os.EOL}`);
+  for (const channel of mergeTargets[keyword]) {
+    await mergeRemoteChannel(`${channel}/v${version.major}/v${version.major}.${version.minor}`);
   }
 }
 
@@ -149,7 +163,7 @@ exports.setOpts = function (argv) {
 
 exports.bumpVersion = (argv) => BumpActions[argv.keyword](argv);
 
-exports.mergeOrigin = (argv) => MergeActions[argv.keyword](argv);
+exports.mergeUpstream = (argv) => MergeActions[argv.keyword](argv);
 
 exports.verify = (argv) => {
   const keyword = getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef);

@@ -25,20 +25,20 @@ const argv = {
 
 async function bump() {
     await lib.gitCall("config", "--global", "user.name", context.actor);
-    await lib.gitCall("config", "--global", "user.email", `${context.actor}@noreply.github.com`);
+    await lib.gitCall("config", "--global", "user.email", `${context.actor}@users.noreply.github.com`);
     lib.bumpVersion(argv);
 }
 
 const run = {
     "auto": async () => {
         await bump();
-        await lib.mergeOrigin(argv);
+        await lib.mergeUpstream(argv);
     },
     "bump": async () => {
         await bump();
     },
     "publish": async () => {
-        await lib.mergeOrigin(argv);
+        await lib.mergeUpstream(argv);
     },
     "verify": async () => {
         lib.verify(argv);
