@@ -9,8 +9,8 @@ const core = __nccwpck_require__(2186);
 const { context } = __nccwpck_require__(5438);
 const lib = __nccwpck_require__(2909);
 
-const action = core.getInput('action');
 const token = core.getInput('token');
+const action = core.getInput('action');
 const headRef = core.getInput('head-ref');
 const baseRef = core.getInput('base-ref');
 const keyword = core.getInput('keyword');
@@ -30,32 +30,64 @@ const argv = {
     keyword: keyword
 };
 
-async function bump() {
+const octokit = github.getOctokit(argv.token);
+
+async function setup() {
+    if (context.eventName == "pull_request") {
+        const { data: pullRequest } = await octokit.rest.pulls.get({
+            owner: argv.owner,
+            repo: argv.repo,
+            number: context.payload.pull_request.number
+        });
+        if (pullRequest.status != "merged") {
+            throw new Error(`Pull request must be merged, but got status ${pullRequest.status}`);
+        }
+    }
+    if (context.eventName == "workflow_dispatch") {
+        if (headRef != "main" || headRef != baseRef) {
+            throw new Error(`Manual trigger on head [${headRef}] -> base [${baseRef}] not supported`);
+        }
+    }
     await lib.gitCall("config", "--global", "user.name", context.actor);
     await lib.gitCall("config", "--global", "user.email", `${context.actor}@users.noreply.github.com`);
-    lib.bumpVersion(argv);
 }
 
 const run = {
     "auto": async () => {
-        await bump();
-        await lib.mergeUpstream(argv);
+        await lib.tryBump(argv);
+        await lib.tryMerge(argv);
     },
     "bump": async () => {
-        await bump();
+        await lib.tryBump(argv);
     },
     "publish": async () => {
-        await lib.mergeUpstream(argv);
+        await lib.tryMerge(argv);
     },
-    "verify": async () => {
-        lib.verify(argv);
+    "prebuild": async () => {
+        if (lib.getBumpKeyword(argv) == "patch") {
+            await lib.tryBump(argv);
+        }
+    },
+    "postbuild": async () => {
+        if (lib.getBumpKeyword(argv) != "patch") {
+            await lib.tryBump(argv);
+        }
+        await lib.tryMerge(argv);
     },
     "protect": async () => {
         await lib.protectBranches(argv);
+    },
+    "verify": async () => {
+        lib.verify(argv);
     }
 };
 
-run[action]().catch(handleError);
+async function main() {
+    await setup();
+    await run[action]();
+}
+
+main().catch(handleError);
 
 /***/ }),
 
@@ -130,8 +162,9 @@ function exec(cmd, args) {
   console.log(output.toString());
 }
 
-function bumpCall(keyword, argv) {
+async function bumpCall(keyword, argv) {
   if (hasLerna(argv.cwd)) {
+    exec("yarn", ["add", "-g", "lerna"]);
     exec("lerna", ["version", `${keyword}`, "--yes", "--no-push"]);
   } else {
     exec("yarn", ["version", `--${keyword}`, "--preid", "alpha"]);
@@ -150,15 +183,14 @@ async function gitCall(...args) {
 async function mergeCall(keyword, argv) {
   const version = getCurrentVersion(argv.cwd);
 
-  await gitCall("tag", "-f", `v${version.major}`);
-  await gitCall("tag", "-f", `v${version.major}.${version.minor}`);
-  await gitCall("push", "-f", "--tags");
+  await gitCall("push", "origin", `HEAD:refs/tags/v${version.major}`);
+  await gitCall("push", "origin", `HEAD:refs/tags/v${version.major}.${version.minor}`);
 
   const pushback = {
     "premajor": () => { },
     "preminor": () => { },
-    "patch": () => gitCall("push"),
-    "prerelease": () => gitCall("push")
+    "prerelease": () => { },
+    "patch": () => gitCall("push")
   };
   pushback[keyword]();
 
@@ -220,11 +252,11 @@ const BumpActions = {
 };
 
 const MergeActions = {
-  "auto": async (argv) => mergeCall(getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef), argv),
-  "patch": async (argv) => mergeCall("patch", argv),
-  "premajor": async (argv) => mergeCall("premajor", argv),
-  "preminor": async (argv) => mergeCall("preminor", argv),
-  "prerelease": async (argv) => mergeCall("prerelease", argv)
+  "auto": (argv) => mergeCall(getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef), argv),
+  "patch": (argv) => mergeCall("patch", argv),
+  "premajor": (argv) => mergeCall("premajor", argv),
+  "preminor": (argv) => mergeCall("preminor", argv),
+  "prerelease": (argv) => mergeCall("prerelease", argv)
 };
 
 exports.gitCall = gitCall;
@@ -233,9 +265,13 @@ exports.setOpts = function (argv) {
   bumpOpts.dry = argv.dry;
 };
 
-exports.bumpVersion = (argv) => BumpActions[argv.keyword](argv);
+exports.currentVersion = () => getCurrentVersion(process.cwd());
 
-exports.mergeUpstream = (argv) => MergeActions[argv.keyword](argv);
+exports.getBumpKeyword = (argv) => getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef);
+
+exports.tryBump = (argv) => BumpActions[argv.keyword](argv);
+
+exports.tryMerge = (argv) => MergeActions[argv.keyword](argv);
 
 exports.verify = (argv) => {
   const keyword = getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef);
@@ -243,37 +279,6 @@ exports.verify = (argv) => {
     throw new Error(`No rule to bump for head/base refs: ${argv.headRef} -> ${argv.baseRef}`);
   }
   return keyword;
-};
-
-exports.protectBranches = async (argv) => {
-  // for (const rule of branchRulesQuery.repository.branchProtectionRules.nodes) {
-  //   const m = await octokit.graphql(`
-  //         mutation {
-  //           updateBranchProtectionRule(input: {
-  //             branchProtectionRuleId: "${rule.id}",
-  //             restrictsPushes: false
-  //           }) {
-  //             branchProtectionRule {
-  //               id
-  //               pattern
-  //               restrictsPushes
-  //             }
-  //           }1
-  //         }`);
-  //   console.log(m);
-  // }
-  const protection = await octokit.rest.repos.updateBranchProtection({
-    owner: argv.owner,
-    repo: argv.repo,
-    branch: "dev/v1/v1.1",
-    allow_force_pushes: false,
-    allow_deletions: false,
-    enforce_admins: true,
-    required_pull_request_reviews: true,
-    required_status_checks: null,
-    restrictions: null
-  });
-  console.log(protection);
 };
 
 /***/ }),

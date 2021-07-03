@@ -20,7 +20,7 @@ exports.argv = require("yargs/yargs")(process.argv.slice(2))
         });
     }, (argv) => {
         lib.setOpts(argv);
-        lib.bumpVersion(argv);
+        lib.tryBump(argv);
     })
     .command("publish <keyword>", "publish", (yargs) => {
         yargs.positional("keyword", {
@@ -31,7 +31,7 @@ exports.argv = require("yargs/yargs")(process.argv.slice(2))
         });
     }, (argv) => {
         lib.setOpts(argv);
-        lib.mergeUpstream(argv).catch(console.error);
+        lib.tryMerge(argv).catch(console.error);
     })
     .command("verify", "verify", (yargs) => {
     }, (argv) => {
