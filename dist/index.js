@@ -35,7 +35,6 @@ const argv = {
 const octokit = github.getOctokit(argv.token);
 
 async function setup() {
-    lib.exec("yarn", ["add", "-g", "lerna@4.0.0"]);
     if (context.eventName == "pull_request") {
         const { data: pullRequest } = await octokit.rest.pulls.get({
             owner: argv.owner,
@@ -178,6 +177,7 @@ async function bumpCall(keyword, argv) {
   await updateTag[keyword]();
 
   if (hasLerna(argv.cwd)) {
+    exec("yarn", ["add", "-g", "lerna@4.0.0"]);
     exec("lerna", ["version", `${keyword}`, "--yes", "--no-push"]);
   } else {
     exec("yarn", ["version", `--${keyword}`, "--preid", "alpha"]);
