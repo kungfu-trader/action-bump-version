@@ -11,8 +11,8 @@ const lib = __nccwpck_require__(2909);
 
 const token = core.getInput('token');
 const action = core.getInput('action');
-const headRef = core.getInput('head-ref');
-const baseRef = core.getInput('base-ref');
+const headRef = core.getInput('head-ref') || process.env.GITHUB_HEAD_REF;
+const baseRef = core.getInput('base-ref') || process.env.GITHUB_BASE_REF;
 const keyword = core.getInput('keyword');
 
 const handleError = (error) => {
@@ -164,7 +164,6 @@ function exec(cmd, args) {
 
 async function bumpCall(keyword, argv) {
   if (hasLerna(argv.cwd)) {
-    exec("yarn", ["add", "-g", "lerna"]);
     exec("lerna", ["version", `${keyword}`, "--yes", "--no-push"]);
   } else {
     exec("yarn", ["version", `--${keyword}`, "--preid", "alpha"]);
@@ -183,16 +182,22 @@ async function gitCall(...args) {
 async function mergeCall(keyword, argv) {
   const version = getCurrentVersion(argv.cwd);
 
-  await gitCall("push", "origin", `HEAD:refs/tags/v${version.major}`);
-  await gitCall("push", "origin", `HEAD:refs/tags/v${version.major}.${version.minor}`);
+  await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version.major}`);
+  await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version.major}.${version.minor}`);
 
   const pushback = {
-    "premajor": () => { },
-    "preminor": () => { },
-    "prerelease": () => { },
-    "patch": () => gitCall("push")
+    "premajor": async () => { },
+    "preminor": async () => { },
+    "prerelease": async () => {
+      await gitCall("push", "-f", "origin", `HEAD~1:refs/tags/v${version}`);
+    },
+    "patch": async () => {
+      await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version}`);
+      await gitCall("push");
+      await gitCall("tag", `v${version}`);
+    }
   };
-  pushback[keyword]();
+  await pushback[keyword]();
 
   const octokit = github.getOctokit(argv.token);
 

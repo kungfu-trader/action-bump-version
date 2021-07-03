@@ -1,4 +1,4 @@
-name: Bump Version - Major
+name: Admin - Bump Major Version
 on:
   workflow_dispatch:
     inputs:

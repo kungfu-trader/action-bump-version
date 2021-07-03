@@ -4,8 +4,8 @@ const lib = require("./lib.js");
 
 const token = core.getInput('token');
 const action = core.getInput('action');
-const headRef = core.getInput('head-ref');
-const baseRef = core.getInput('base-ref');
+const headRef = core.getInput('head-ref') || process.env.GITHUB_HEAD_REF;
+const baseRef = core.getInput('base-ref') || process.env.GITHUB_BASE_REF;
 const keyword = core.getInput('keyword');
 
 const handleError = (error) => {
