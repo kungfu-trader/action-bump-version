@@ -1,6 +1,8 @@
 const core = require('@actions/core');
-const { context } = require("@actions/github");
+const github = require("@actions/github");
 const lib = require("./lib.js");
+
+const context = github.context;
 
 const token = core.getInput('token');
 const action = core.getInput('action');
