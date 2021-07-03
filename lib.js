@@ -177,6 +177,8 @@ const MergeActions = {
   "prerelease": (argv) => mergeCall("prerelease", argv)
 };
 
+exports.exec = exec;
+
 exports.gitCall = gitCall;
 
 exports.setOpts = function (argv) {

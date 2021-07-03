@@ -35,6 +35,7 @@ const argv = {
 const octokit = github.getOctokit(argv.token);
 
 async function setup() {
+    lib.exec("yarn", "add", "-g", "lerna@4.0.0");
     if (context.eventName == "pull_request") {
         const { data: pullRequest } = await octokit.rest.pulls.get({
             owner: argv.owner,
@@ -274,6 +275,8 @@ const MergeActions = {
   "preminor": (argv) => mergeCall("preminor", argv),
   "prerelease": (argv) => mergeCall("prerelease", argv)
 };
+
+exports.exec = exec;
 
 exports.gitCall = gitCall;
 
