@@ -73,7 +73,7 @@ async function bumpCall(keyword, argv) {
     "preminor": async () => { },
     "prerelease": async () => {
       await gitCall("push", "origin", `HEAD:refs/tags/v${version}`);
-     },
+    },
     "patch": async () => { }
   };
   await updateTag[keyword]();

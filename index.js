@@ -32,9 +32,9 @@ async function setup() {
         const { data: pullRequest } = await octokit.rest.pulls.get({
             owner: argv.owner,
             repo: argv.repo,
-            number: context.payload.pull_request.number
+            pull_number: context.payload.pull_request.number
         });
-        if (pullRequest.status != "merged") {
+        if (action != "verify" && pullRequest.status != "merged") {
             throw new Error(`Pull request must be merged, but got status ${pullRequest.status}`);
         }
     }
@@ -68,9 +68,6 @@ const run = {
             await lib.tryBump(argv);
         }
         await lib.tryMerge(argv);
-    },
-    "protect": async () => {
-        await lib.protectBranches(argv);
     },
     "verify": async () => {
         lib.verify(argv);

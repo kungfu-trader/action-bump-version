@@ -13,7 +13,7 @@ inputs:
     description: "Choices [auto/patch/premajor/preminor/prerelease]"
     default: "auto"
   action:
-    description: "Choices [auto/bump/publish/verify/protect]"
+    description: "Choices [auto/bump/publish/prebuild/postbuild/verify]"
     default: "auto"
 runs:
   using: "node12"

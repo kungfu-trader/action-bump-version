@@ -38,11 +38,6 @@ exports.argv = require("yargs/yargs")(process.argv.slice(2))
         lib.setOpts(argv);
         lib.verify(argv);
     })
-    .command("protect", "protect", (yargs) => {
-    }, (argv) => {
-        lib.setOpts(argv);
-        lib.protectBranches(argv).catch(console.error);
-    })
     .demandCommand()
     .help()
     .argv;
