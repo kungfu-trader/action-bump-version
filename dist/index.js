@@ -165,6 +165,17 @@ function exec(cmd, args) {
 }
 
 async function bumpCall(keyword, argv) {
+  const version = getCurrentVersion(argv.cwd);
+  const updateTag = {
+    "premajor": async () => { },
+    "preminor": async () => { },
+    "prerelease": async () => {
+      await gitCall("push", "origin", `HEAD:refs/tags/v${version}`);
+     },
+    "patch": async () => { }
+  };
+  await updateTag[keyword]();
+
   if (hasLerna(argv.cwd)) {
     exec("lerna", ["version", `${keyword}`, "--yes", "--no-push"]);
   } else {
@@ -184,17 +195,15 @@ async function gitCall(...args) {
 async function mergeCall(keyword, argv) {
   const version = getCurrentVersion(argv.cwd);
 
-  await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version.major}`);
-  await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version.major}.${version.minor}`);
+  await gitCall("push", "origin", `HEAD:refs/tags/v${version.major}`);
+  await gitCall("push", "origin", `HEAD:refs/tags/v${version.major}.${version.minor}`);
 
   const pushback = {
     "premajor": async () => { },
     "preminor": async () => { },
-    "prerelease": async () => {
-      await gitCall("push", "-f", "origin", `HEAD~1:refs/tags/v${version}`);
-    },
+    "prerelease": async () => { },
     "patch": async () => {
-      await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version}`);
+      await gitCall("push", "origin", `HEAD:refs/tags/v${version}`);
       await gitCall("push");
       await gitCall("tag", `v${version}`);
     }
