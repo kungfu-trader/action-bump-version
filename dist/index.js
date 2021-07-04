@@ -181,7 +181,7 @@ async function bumpCall(keyword, argv, message) {
   };
   await updateTag[keyword]();
 
-  const messageOpts = message ? ["-m", message] : [];
+  const messageOpts = message ? ["-m", `"${message}"`] : [];
 
   if (hasLerna(argv.cwd)) {
     exec("npm", ["install", "-g", "lerna"]);
