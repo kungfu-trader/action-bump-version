@@ -174,7 +174,7 @@ async function bumpCall(keyword, argv) {
   await updateTag[keyword]();
 
   if (hasLerna(argv.cwd)) {
-    exec("yarn", ["add", "-g", "lerna@4.0.0"]);
+    exec("npm", ["install", "-g", "lerna@4.0.0"]);
     exec("lerna", ["version", `${keyword}`, "--yes", "--no-push"]);
   } else {
     exec("yarn", ["version", `--${keyword}`, "--preid", "alpha"]);
