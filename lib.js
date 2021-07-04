@@ -72,7 +72,9 @@ async function bumpCall(keyword, argv) {
     "premajor": async () => { },
     "preminor": async () => { },
     "prerelease": async () => {
-      await gitCall("push", "origin", `HEAD:refs/tags/v${version}`);
+      if (argv.baseRef.split('/')[0] == "alpha") { // filter call from patch workflow
+        await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version}`);
+      }
     },
     "patch": async () => { }
   };
@@ -95,11 +97,15 @@ async function gitCall(...args) {
   console.log(output);
 }
 
+async function updateTrackingChannels(version) {
+  await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version.major}`);
+  await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version.major}.${version.minor}`);
+}
+
 async function mergeCall(keyword, argv) {
   const version = getCurrentVersion(argv.cwd);
 
-  await gitCall("push", "origin", `HEAD:refs/tags/v${version.major}`);
-  await gitCall("push", "origin", `HEAD:refs/tags/v${version.major}.${version.minor}`);
+  await updateTrackingChannels(version);
 
   const pushback = {
     "premajor": async () => { },
@@ -109,6 +115,8 @@ async function mergeCall(keyword, argv) {
       await gitCall("push", "origin", `HEAD:refs/tags/v${version}`);
       await gitCall("push");
       await gitCall("tag", `v${version}`);
+      await bumpCall("prerelease", argv);
+      await updateTrackingChannels(version);
     }
   };
   await pushback[keyword]();
