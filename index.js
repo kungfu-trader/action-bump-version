@@ -75,8 +75,13 @@ const run = {
 };
 
 async function main() {
+    core.setOutput("keyword", lib.getBumpKeyword(argv));
+    core.setOutput("last-version", lib.currentVersion().toString());
     await setup();
     await run[action]();
+    const version = lib.currentVersion();
+    core.setOutput("version", version.toString());
+    core.setOutput("tags", [`v${version}`, `v${version.major}`, `v${version.major}.${version.minor}`]);
 }
 
 main().catch(handleError);

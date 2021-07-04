@@ -82,8 +82,13 @@ const run = {
 };
 
 async function main() {
+    core.setOutput("keyword", lib.getBumpKeyword(argv));
+    core.setOutput("last-version", lib.currentVersion().toString());
     await setup();
     await run[action]();
+    const version = lib.currentVersion();
+    core.setOutput("version", version.toString());
+    core.setOutput("tags", [`v${version}`, `v${version.major}`, `v${version.major}.${version.minor}`]);
 }
 
 main().catch(handleError);
@@ -236,7 +241,7 @@ async function mergeCall(keyword, argv) {
       repo: argv.repo,
       base: branch.ref,
       head: latestRef.object.sha,
-      commit_message: `Merge version ${version} into ${branchRef}`
+      commit_message: `Update ${branchRef} to version ${version}`
     });
     if (merge.status != 201 && merge.status != 204) {
       console.error(merge);

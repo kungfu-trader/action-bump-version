@@ -141,7 +141,7 @@ async function mergeCall(keyword, argv) {
       repo: argv.repo,
       base: branch.ref,
       head: latestRef.object.sha,
-      commit_message: `Merge version ${version} into ${branchRef}`
+      commit_message: `Update ${branchRef} to version ${version}`
     });
     if (merge.status != 201 && merge.status != 204) {
       console.error(merge);
