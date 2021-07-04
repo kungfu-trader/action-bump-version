@@ -216,17 +216,18 @@ async function mergeCall(keyword, argv) {
       await gitCall("push", "origin", `HEAD:refs/tags/v${version}`);
       await gitCall("push");
       await bumpCall("prerelease", argv);
-      await updateTrackingChannels(version);
+      await updateTrackingChannels(getCurrentVersion(argv.cwd));
     }
   };
   await pushback[keyword]();
 
+  const newVersion = getCurrentVersion(argv.cwd);
   const octokit = github.getOctokit(argv.token);
 
   const { data: latestRef } = await octokit.rest.git.getRef({
     owner: argv.owner,
     repo: argv.repo,
-    ref: `tags/v${version.major}`
+    ref: `tags/v${newVersion.major}`
   });
 
   const mergeRemoteChannel = async (branchRef) => {
@@ -249,7 +250,7 @@ async function mergeCall(keyword, argv) {
       repo: argv.repo,
       base: branch.ref,
       head: latestRef.object.sha,
-      commit_message: `Update ${branchRef} to version ${version}`
+      commit_message: `Update ${branchRef} to version ${newVersion}`
     });
     if (merge.status != 201 && merge.status != 204) {
       console.error(merge);
@@ -266,7 +267,7 @@ async function mergeCall(keyword, argv) {
 
   console.log(`${os.EOL}# https://docs.github.com/en/rest/reference/repos#merge-a-branch${os.EOL}`);
   for (const channel of mergeTargets[keyword]) {
-    await mergeRemoteChannel(`${channel}/v${version.major}/v${version.major}.${version.minor}`);
+    await mergeRemoteChannel(`${channel}/v${newVersion.major}/v${newVersion.major}.${newVersion.minor}`);
   }
 }
 
