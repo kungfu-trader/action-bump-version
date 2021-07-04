@@ -166,7 +166,7 @@ function exec(cmd, args) {
   console.log(output.toString());
 }
 
-async function bumpCall(keyword, argv) {
+async function bumpCall(keyword, argv, message) {
   const version = getCurrentVersion(argv.cwd);
   const updateTag = {
     "premajor": async () => { },
@@ -181,11 +181,13 @@ async function bumpCall(keyword, argv) {
   };
   await updateTag[keyword]();
 
+  const messageOpts = message ? ["-m", message] : [];
+
   if (hasLerna(argv.cwd)) {
     exec("npm", ["install", "-g", "lerna"]);
-    exec("lerna", ["version", `${keyword}`, "--yes", "--no-push"]);
+    exec("lerna", ["version", `${keyword}`, "--yes", "--no-push", ...messageOpts]);
   } else {
-    exec("yarn", ["version", `--${keyword}`, "--preid", "alpha"]);
+    exec("yarn", ["version", `--${keyword}`, "--preid", "alpha", ...messageOpts]);
   }
 }
 
@@ -230,19 +232,19 @@ async function mergeCall(keyword, argv) {
     ref: `tags/v${newVersion.major}`
   });
 
-  const mergeRemoteChannel = async (branchRef) => {
-    console.log(`> merge into ${argv.repo} ${branchRef}`);
+  const mergeRemoteChannel = async (channelRef) => {
+    console.log(`> merge into ${argv.repo} ${channelRef}`);
     if (bumpOpts.dry) {
       return;
     }
     const { data: branch } = await octokit.rest.git.getRef({
       owner: argv.owner,
       repo: argv.repo,
-      ref: `heads/${branchRef}`
+      ref: `heads/${channelRef}`
     }).catch(() => octokit.rest.git.createRef({
       owner: argv.owner,
       repo: argv.repo,
-      ref: `refs/heads/${branchRef}`,
+      ref: `refs/heads/${channelRef}`,
       sha: latestRef.object.sha
     }));
     const merge = await octokit.rest.repos.merge({
@@ -250,7 +252,7 @@ async function mergeCall(keyword, argv) {
       repo: argv.repo,
       base: branch.ref,
       head: latestRef.object.sha,
-      commit_message: `Update ${branchRef} to version ${newVersion}`
+      commit_message: `Update ${channelRef} to version ${newVersion}`
     });
     if (merge.status != 201 && merge.status != 204) {
       console.error(merge);
@@ -279,8 +281,9 @@ async function mergeCall(keyword, argv) {
       const devChannel = `dev/${versionRef}`;
       await gitCall("fetch");
       await gitCall("switch", "-c", devChannel, `origin/${devChannel}`);
-      await bumpCall("prepatch", argv);
+      await bumpCall("prepatch", argv, `Update ${devChannel} to version ${newVersion}`);
       await gitCall("push", "origin", `HEAD:${devChannel}`);
+      await gitCall("switch", argv.baseRef);
     }
   };
   await liftDevChannel[keyword]();
