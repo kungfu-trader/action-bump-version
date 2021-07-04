@@ -171,6 +171,7 @@ async function bumpCall(keyword, argv) {
   const updateTag = {
     "premajor": async () => { },
     "preminor": async () => { },
+    "prepatch": async () => { },
     "prerelease": async () => {
       if (argv.baseRef.split('/')[0] == "alpha") { // filter out call from patch workflow
         await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version}`);
@@ -212,7 +213,6 @@ async function mergeCall(keyword, argv) {
     "preminor": async () => { },
     "prerelease": async () => { },
     "patch": async () => {
-      await gitCall("tag", "-f", `v${version}`);
       await gitCall("push", "origin", `HEAD:refs/tags/v${version}`);
       await gitCall("push");
       await bumpCall("prerelease", argv);
@@ -252,11 +252,6 @@ async function mergeCall(keyword, argv) {
       head: latestRef.object.sha,
       commit_message: `Update ${branchRef} to version ${newVersion}`
     });
-    if (merge.status == 409) {
-      console.warn(`> force push to solve merge conflict`);
-      await gitCall("push", "-f", "origin", `HEAD:${branchRef}`);
-      return;
-    }
     if (merge.status != 201 && merge.status != 204) {
       console.error(merge);
       throw new Error(`Merge failed with status ${merge.status}`);
@@ -266,14 +261,29 @@ async function mergeCall(keyword, argv) {
   const mergeTargets = {
     "premajor": ["release", "alpha", "dev"],
     "preminor": ["release", "alpha", "dev"],
-    "patch": ["alpha", "dev"],
+    "patch": ["alpha"],
     "prerelease": ["dev"]
   };
+  const versionRef = `v${newVersion.major}/v${newVersion.major}.${newVersion.minor}`;
 
   console.log(`${os.EOL}# https://docs.github.com/en/rest/reference/repos#merge-a-branch${os.EOL}`);
   for (const channel of mergeTargets[keyword]) {
-    await mergeRemoteChannel(`${channel}/v${newVersion.major}/v${newVersion.major}.${newVersion.minor}`);
+    await mergeRemoteChannel(`${channel}/${versionRef}`);
   }
+
+  const liftDevChannel = {
+    "premajor": async () => { },
+    "preminor": async () => { },
+    "prerelease": async () => { },
+    "patch": async () => {
+      const devChannel = `dev/v${versionRef}`;
+      await gitCall("fetch");
+      await gitCall("switch", "-c", devChannel, `origin/${devChannel}`);
+      await bumpCall("prepatch", argv);
+      await gitCall("push", "origin", `HEAD:${devChannel}`);
+    }
+  };
+  await liftDevChannel[keyword]();
 }
 
 const BumpActions = {
