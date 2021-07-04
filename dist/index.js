@@ -172,7 +172,7 @@ async function bumpCall(keyword, argv) {
     "premajor": async () => { },
     "preminor": async () => { },
     "prerelease": async () => {
-      if (argv.baseRef.split('/')[0] == "alpha") { // filter call from patch workflow
+      if (argv.baseRef.split('/')[0] == "alpha") { // filter out call from patch workflow
         await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version}`);
       }
     },
@@ -181,7 +181,7 @@ async function bumpCall(keyword, argv) {
   await updateTag[keyword]();
 
   if (hasLerna(argv.cwd)) {
-    exec("npm", ["install", "-g", "lerna@4.0.0"]);
+    exec("npm", ["install", "-g", "lerna"]);
     exec("lerna", ["version", `${keyword}`, "--yes", "--no-push"]);
   } else {
     exec("yarn", ["version", `--${keyword}`, "--preid", "alpha"]);
