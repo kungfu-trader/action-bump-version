@@ -181,6 +181,7 @@ async function mergeCall(keyword, argv) {
       await gitCall("switch", "-c", devChannel, `origin/${devChannel}`);
       await bumpCall("prepatch", argv);
       await gitCall("push", "origin", `HEAD:${devChannel}`);
+      await gitCall("switch", argv.baseRef);
     }
   };
   await liftDevChannel[keyword]();
