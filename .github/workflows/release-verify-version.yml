@@ -1,4 +1,4 @@
-name: Bump Version - Verify
+name: Release - Verify Version
 on:
   pull_request:
     types: [opened]
@@ -18,6 +18,4 @@ jobs:
         uses: kungfu-trader/action-bump-version@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          head-ref: ${{ github.head_ref}}
-          base-ref: ${{ github.base_ref }}
           action: "verify"
