@@ -212,9 +212,9 @@ async function mergeCall(keyword, argv) {
     "preminor": async () => { },
     "prerelease": async () => { },
     "patch": async () => {
+      await gitCall("tag", "-f", `v${version}`);
       await gitCall("push", "origin", `HEAD:refs/tags/v${version}`);
       await gitCall("push");
-      await gitCall("tag", `v${version}`);
       await bumpCall("prerelease", argv);
       await updateTrackingChannels(version);
     }
