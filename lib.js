@@ -152,6 +152,11 @@ async function mergeCall(keyword, argv) {
       head: latestRef.object.sha,
       commit_message: `Update ${branchRef} to version ${newVersion}`
     });
+    if (merge.status == 409) {
+      console.warn(`> force push to solve merge conflict`);
+      await gitCall("push", "-f", "origin", `HEAD:${branchRef}`);
+      return;
+    }
     if (merge.status != 201 && merge.status != 204) {
       console.error(merge);
       throw new Error(`Merge failed with status ${merge.status}`);
