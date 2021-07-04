@@ -276,7 +276,7 @@ async function mergeCall(keyword, argv) {
     "preminor": async () => { },
     "prerelease": async () => { },
     "patch": async () => {
-      const devChannel = `dev/v${versionRef}`;
+      const devChannel = `dev/${versionRef}`;
       await gitCall("fetch");
       await gitCall("switch", "-c", devChannel, `origin/${devChannel}`);
       await bumpCall("prepatch", argv);
