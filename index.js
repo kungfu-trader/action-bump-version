@@ -80,7 +80,7 @@ async function main() {
     await setup();
     await run[action]();
     const version = lib.currentVersion();
-    core.setOutput("version", version.toString());
+    core.setOutput("version", `v${version}`);
     core.setOutput("tags", [`v${version}`, `v${version.major}`, `v${version.major}.${version.minor}`]);
 }
 
