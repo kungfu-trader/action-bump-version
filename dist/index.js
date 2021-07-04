@@ -281,7 +281,7 @@ async function mergeCall(keyword, argv) {
       const devChannel = `dev/${versionRef}`;
       await gitCall("fetch");
       await gitCall("switch", "-c", devChannel, `origin/${devChannel}`);
-      await bumpCall("prepatch", argv, `Lift ${devChannel} to ${newVersion}`);
+      await bumpCall("prepatch", argv, `Update ${devChannel} to version ${newVersion}`);
       await gitCall("push", "origin", `HEAD:${devChannel}`);
       await gitCall("switch", argv.baseRef);
     }
