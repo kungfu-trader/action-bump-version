@@ -19,39 +19,45 @@ function getCurrentVersion(cwd) {
   return semver.parse(config.version);
 }
 
-function getBumpKeyword(cwd, headRef, baseRef) {
+function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
   const version = getCurrentVersion(cwd);
+  const looseVersion = Number(`${version.major}.${version.minor}`);
+  const lastLooseVersion = looseVersion - 0.1;
   const headChannel = headRef.split('/')[0];
   const baseChannel = baseRef.split('/')[0];
+  const key = `${headChannel}->${baseChannel}`;
   const keywords = {
     "dev->alpha": "prerelease",
     "alpha->release": "patch",
     "release->main": "preminor",
     "main->main": "premajor"
   };
-  const key = `${headChannel}->${baseChannel}`;
-  const lastMinor = Number(`${version.major}.${version.minor}`) - 0.1;
 
   if (headRef.replace(headChannel, "") !== baseRef.replace(baseChannel, "") && baseChannel != "main") {
     throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
   }
 
-  if (headChannel == "main") {
+  if (headChannel == "main") { // for main -> main
     return keywords[key];
   }
 
   const headMatch = headRef.match(/(\w+)\/v(\d+)\/v(\d+\.\d)/);
+  const mismatchMsg = `The version of head ref ${headRef} does not match current ${version}`;
 
   if (!headMatch) {
-    throw new Error(`Invalid versions for head/base refs: ${headRef} -> ${baseRef}`);
+    throw new Error(mismatchMsg);
   }
 
-  if (headMatch[2] == version.major && headMatch[3] == lastMinor && baseChannel == "main") {
-    return keywords[key];
+  if (headMatch[2] != version.major || headMatch[3] > looseVersion) {
+    throw new Error(mismatchMsg);
   }
 
-  if ((headMatch[2] != version.major || headMatch[3] != `${version.major}.${version.minor}`) && baseChannel != "main") {
-    throw new Error(`The version of head ref ${headRef} does not match current ${version}`);
+  if (headMatch[3] < lastLooseVersion) {
+    throw new Error(mismatchMsg);
+  }
+
+  if (headMatch[3] == lastLooseVersion && !loose) {
+    throw new Error(mismatchMsg);
   }
 
   return keywords[key];
@@ -85,7 +91,7 @@ async function bumpCall(keyword, argv, message) {
   };
   await updateTag[keyword]();
 
-  const messageOpts = message ? ["-m", `"${message}"`] : [];
+  const messageOpts = message ? ["--message", `"${message}"`] : [];
 
   if (hasLerna(argv.cwd)) {
     exec("npm", ["install", "-g", "lerna"]);
@@ -203,7 +209,7 @@ const BumpActions = {
 };
 
 const MergeActions = {
-  "auto": (argv) => mergeCall(getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef), argv),
+  "auto": (argv) => mergeCall(getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef, true), argv),
   "patch": (argv) => mergeCall("patch", argv),
   "premajor": (argv) => mergeCall("premajor", argv),
   "preminor": (argv) => mergeCall("preminor", argv),
