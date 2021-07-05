@@ -221,6 +221,7 @@ async function mergeCall(keyword, argv) {
   }).catch(() => pushTag(`v${v.major}`));
   const pushLooseVersionTag = (v) => pushTag(`v${getLooseVersionNumber(v)}`);
 
+  console.log("> push loose version tag");
   await pushLooseVersionTag(version);
 
   if (keyword == "patch") {
