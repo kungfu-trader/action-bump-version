@@ -180,6 +180,15 @@ function exec(cmd, args = []) {
   }
 }
 
+async function gitCall(...args) {
+  console.log("$ git", ...args);
+  if (bumpOpts.dry) {
+    return;
+  }
+  const output = await git(...args);
+  console.log(output);
+}
+
 async function bumpCall(keyword, argv, message) {
   const version = getCurrentVersion(argv.cwd);
 
@@ -198,15 +207,6 @@ async function bumpCall(keyword, argv, message) {
   } else {
     exec("yarn", ["version", `--${keyword}`, "--preid", "alpha", ...messageOpt]);
   }
-}
-
-async function gitCall(...args) {
-  console.log("$ git", ...args);
-  if (bumpOpts.dry) {
-    return;
-  }
-  const output = await git(...args);
-  console.log(output);
 }
 
 async function mergeCall(keyword, argv) {
@@ -228,7 +228,7 @@ async function mergeCall(keyword, argv) {
     await pushMajorVersionTag(version);
     // Make release commit and tag
     await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version}`);
-    await gitCall("push");
+    await gitCall("push", "-f", "origin", `HEAD:refs/heads/${argv.baseRef}`);
     // Prepare new prerelease version for alpha channel
     await bumpCall("prerelease", argv);
     await pushLooseVersionTag(getCurrentVersion(argv.cwd));
