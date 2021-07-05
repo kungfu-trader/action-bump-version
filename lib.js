@@ -109,28 +109,33 @@ async function gitCall(...args) {
   console.log(output);
 }
 
-async function updateTrackingTags(version) {
-  await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version.major}`);
-  await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${getLooseVersionNumber(version)}`);
-}
-
 async function mergeCall(keyword, argv) {
+  const octokit = github.getOctokit(argv.token);
   const version = getCurrentVersion(argv.cwd);
 
-  await updateTrackingTags(version);
+  const pushTag = (tag) => gitCall("push", "-f", "origin", `HEAD:refs/tags/${tag}`);
+  const pushMajorVersionTag = (v) => octokit.rest.git.getRef({
+    owner: argv.owner,
+    repo: argv.repo,
+    ref: `tags/v${v.major}.${v.minor + 1}`
+  }).catch(() => pushTag(`v${v.major}`));
+  const pushLooseVersionTag = (v) => pushTag(`v${getLooseVersionNumber(v)}`);
+
+  await pushLooseVersionTag(version);
 
   if (keyword == "patch") {
+    // Track major version on release channel
+    await pushMajorVersionTag(version);
     // Make release commit and tag
     await gitCall("push", "origin", `HEAD:refs/tags/v${version}`);
     await gitCall("push");
     // Prepare new prerelease version for alpha channel
     await bumpCall("prerelease", argv);
-    await updateTrackingTags(getCurrentVersion(argv.cwd));
+    await pushLooseVersionTag(getCurrentVersion(argv.cwd));
   }
 
   const newVersion = getCurrentVersion(argv.cwd); // Version might be changed after patch bump
   const looseVersionNumber = getLooseVersionNumber(newVersion);
-  const octokit = github.getOctokit(argv.token);
 
   const { data: looseVersionRef } = await octokit.rest.git.getRef({
     owner: argv.owner,
