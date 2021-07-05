@@ -227,7 +227,7 @@ async function mergeCall(keyword, argv) {
     // Track major version on release channel
     await pushMajorVersionTag(version);
     // Make release commit and tag
-    await gitCall("push", "origin", `HEAD:refs/tags/v${version}`);
+    await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version}`);
     await gitCall("push");
     // Prepare new prerelease version for alpha channel
     await bumpCall("prerelease", argv);
