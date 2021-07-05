@@ -119,13 +119,13 @@ function getCurrentVersion(cwd) {
   return semver.parse(config.version);
 }
 
-function getLooseVersionNumber(version) {
-  return Number(`${version.major}.${version.minor}`);
+function getLooseVersion(version) {
+  return `${version.major}.${version.minor}`;
 }
 
 function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
   const version = getCurrentVersion(cwd);
-  const looseVersionNumber = getLooseVersionNumber(version);
+  const looseVersionNumber = Number(getLooseVersion(version));
   const lastLooseVersionNumber = looseVersionNumber - 0.1;
   const headChannel = headRef.split('/')[0];
   const baseChannel = baseRef.split('/')[0];
@@ -219,7 +219,7 @@ async function mergeCall(keyword, argv) {
     repo: argv.repo,
     ref: `tags/v${v.major}.${v.minor + 1}`
   }).catch(() => pushTag(`v${v.major}`));
-  const pushLooseVersionTag = (v) => pushTag(`v${getLooseVersionNumber(v)}`);
+  const pushLooseVersionTag = (v) => pushTag(`v${getLooseVersion(v)}`);
 
   await pushLooseVersionTag(version);
 
@@ -235,16 +235,16 @@ async function mergeCall(keyword, argv) {
   }
 
   const newVersion = getCurrentVersion(argv.cwd); // Version might be changed after patch bump
-  const looseVersionNumber = getLooseVersionNumber(newVersion);
+  const looseVersion = getLooseVersion(newVersion);
 
   const { data: looseVersionRef } = await octokit.rest.git.getRef({
     owner: argv.owner,
     repo: argv.repo,
-    ref: `tags/v${looseVersionNumber}`
+    ref: `tags/v${looseVersion}`
   });
 
   const mergeRemoteChannel = async (channelRef) => {
-    console.log(`> merge ${argv.repo}/v${looseVersionNumber} into ${argv.repo}/${channelRef}`);
+    console.log(`> merge ${argv.repo}/v${looseVersion} into ${argv.repo}/${channelRef}`);
     if (bumpOpts.dry) {
       return;
     }
