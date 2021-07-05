@@ -221,7 +221,6 @@ async function mergeCall(keyword, argv) {
   }).catch(() => pushTag(`v${v.major}`));
   const pushLooseVersionTag = (v) => pushTag(`v${getLooseVersionNumber(v)}`);
 
-  console.log("> push loose version tag");
   await pushLooseVersionTag(version);
 
   if (keyword == "patch") {
@@ -245,7 +244,7 @@ async function mergeCall(keyword, argv) {
   });
 
   const mergeRemoteChannel = async (channelRef) => {
-    console.log(`> merge into ${argv.repo} ${channelRef}`);
+    console.log(`> merge ${argv.repo}/v${looseVersionNumber} into ${argv.repo}/${channelRef}`);
     if (bumpOpts.dry) {
       return;
     }
