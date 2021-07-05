@@ -178,6 +178,7 @@ function exec(cmd, args = []) {
 
 async function bumpCall(keyword, argv, message) {
   const version = getCurrentVersion(argv.cwd);
+  const nextVersion = semver.inc(version, keyword, 'alpha');
   const updateTag = {
     "premajor": async () => { },
     "preminor": async () => { },
@@ -191,13 +192,14 @@ async function bumpCall(keyword, argv, message) {
   };
   await updateTag[keyword]();
 
-  const messageOpts = message ? ["--message", `"${message}"`] : [];
+  const nonReleaseMessageOpt = ["--message", message ? `"${message}"` : `"Move on to v${nextVersion}"`];
+  const messageOpt = keyword == "patch" ? [] : nonReleaseMessageOpt;
 
   if (hasLerna(argv.cwd)) {
     exec("npm", ["install", "-g", "lerna"]);
-    exec("lerna", ["version", `${keyword}`, "--yes", "--no-push", ...messageOpts]);
+    exec("lerna", ["version", `${keyword}`, "--yes", "--no-push", ...messageOpt]);
   } else {
-    exec("yarn", ["version", `--${keyword}`, "--preid", "alpha", ...messageOpts]);
+    exec("yarn", ["version", `--${keyword}`, "--preid", "alpha", ...messageOpt]);
   }
 }
 
@@ -262,7 +264,7 @@ async function mergeCall(keyword, argv) {
       repo: argv.repo,
       base: branch.ref,
       head: latestRef.object.sha,
-      commit_message: `Update ${channelRef} to version ${newVersion}`
+      commit_message: `Update ${channelRef} to work on ${newVersion}`
     });
     if (merge.status != 201 && merge.status != 204) {
       console.error(merge);
@@ -292,7 +294,7 @@ async function mergeCall(keyword, argv) {
       await gitCall("fetch");
       await gitCall("switch", "-c", devChannel, `origin/${devChannel}`);
       await gitCall("tag", "-d", `v${newVersion}`);
-      await bumpCall("prepatch", argv, `Update ${devChannel} to version ${newVersion}`);
+      await bumpCall("prepatch", argv, `Update ${devChannel} to work on ${newVersion}`);
       await gitCall("push", "origin", `HEAD:${devChannel}`);
       await gitCall("switch", argv.baseRef);
     }
