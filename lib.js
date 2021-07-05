@@ -19,10 +19,14 @@ function getCurrentVersion(cwd) {
   return semver.parse(config.version);
 }
 
+function getLooseVersionNumber(version) {
+  return Number(`${version.major}.${version.minor}`);
+}
+
 function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
   const version = getCurrentVersion(cwd);
-  const looseVersion = Number(`${version.major}.${version.minor}`);
-  const lastLooseVersion = looseVersion - 0.1;
+  const looseVersionNumber = getLooseVersionNumber(version);
+  const lastLooseVersionNumber = looseVersionNumber - 0.1;
   const headChannel = headRef.split('/')[0];
   const baseChannel = baseRef.split('/')[0];
   const key = `${headChannel}->${baseChannel}`;
@@ -48,15 +52,15 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
     throw new Error(mismatchMsg);
   }
 
-  if (headMatch[2] != version.major || headMatch[3] > looseVersion) {
+  if (headMatch[2] != version.major || headMatch[3] > looseVersionNumber) {
     throw new Error(mismatchMsg);
   }
 
-  if (headMatch[3] < lastLooseVersion) {
+  if (headMatch[3] < lastLooseVersionNumber) {
     throw new Error(mismatchMsg);
   }
 
-  if (headMatch[3] == lastLooseVersion && !loose) {
+  if (headMatch[3] == lastLooseVersionNumber && !loose) {
     throw new Error(mismatchMsg);
   }
 
@@ -78,20 +82,13 @@ function exec(cmd, args = []) {
 
 async function bumpCall(keyword, argv, message) {
   const version = getCurrentVersion(argv.cwd);
-  const updateTag = {
-    "premajor": async () => { },
-    "preminor": async () => { },
-    "prepatch": async () => { },
-    "prerelease": async () => {
-      if (argv.baseRef.split('/')[0] == "alpha") { // filter out call from patch workflow
-        await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version}`);
-      }
-    },
-    "patch": async () => { }
-  };
-  await updateTag[keyword]();
 
-  semver.inc(version, keyword, 'alpha');
+  if (keyword == "prerelease" && argv.baseRef.split('/')[0] == "alpha") {
+    // Publish prerelease tag on alpha channel, has to be done before bump
+    await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version}`);
+  }
+
+  semver.inc(version, keyword, 'alpha'); // Get next version to make up message
   const nonReleaseMessageOpt = ["--message", message ? `"${message}"` : `"Move on to v${version}"`];
   const messageOpt = keyword == "patch" ? [] : nonReleaseMessageOpt;
 
@@ -112,36 +109,33 @@ async function gitCall(...args) {
   console.log(output);
 }
 
-async function updateTrackingChannels(version) {
+async function updateTrackingTags(version) {
   await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version.major}`);
-  await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version.major}.${version.minor}`);
+  await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${getLooseVersionNumber(version)}`);
 }
 
 async function mergeCall(keyword, argv) {
   const version = getCurrentVersion(argv.cwd);
 
-  await updateTrackingChannels(version);
+  await updateTrackingTags(version);
 
-  const pushback = {
-    "premajor": async () => { },
-    "preminor": async () => { },
-    "prerelease": async () => { },
-    "patch": async () => {
-      await gitCall("push", "origin", `HEAD:refs/tags/v${version}`);
-      await gitCall("push");
-      await bumpCall("prerelease", argv);
-      await updateTrackingChannels(getCurrentVersion(argv.cwd));
-    }
-  };
-  await pushback[keyword]();
+  if (keyword == "patch") {
+    // Make release commit and tag
+    await gitCall("push", "origin", `HEAD:refs/tags/v${version}`);
+    await gitCall("push");
+    // Prepare new prerelease version for alpha channel
+    await bumpCall("prerelease", argv);
+    await updateTrackingTags(getCurrentVersion(argv.cwd));
+  }
 
   const newVersion = getCurrentVersion(argv.cwd); // Version might be changed after patch bump
+  const looseVersionNumber = getLooseVersionNumber(newVersion);
   const octokit = github.getOctokit(argv.token);
 
-  const { data: latestRef } = await octokit.rest.git.getRef({
+  const { data: looseVersionRef } = await octokit.rest.git.getRef({
     owner: argv.owner,
     repo: argv.repo,
-    ref: `tags/v${newVersion.major}`
+    ref: `tags/v${looseVersionNumber}`
   });
 
   const mergeRemoteChannel = async (channelRef) => {
@@ -157,13 +151,13 @@ async function mergeCall(keyword, argv) {
       owner: argv.owner,
       repo: argv.repo,
       ref: `refs/heads/${channelRef}`,
-      sha: latestRef.object.sha
+      sha: looseVersionRef.object.sha
     }));
     const merge = await octokit.rest.repos.merge({
       owner: argv.owner,
       repo: argv.repo,
       base: branch.ref,
-      head: latestRef.object.sha,
+      head: looseVersionRef.object.sha,
       commit_message: `Update ${channelRef} to work on ${newVersion}`
     });
     if (merge.status != 201 && merge.status != 204) {
@@ -185,21 +179,16 @@ async function mergeCall(keyword, argv) {
     await mergeRemoteChannel(`${channel}/${versionRef}`);
   }
 
-  const liftDevChannel = {
-    "premajor": async () => { },
-    "preminor": async () => { },
-    "prerelease": async () => { },
-    "patch": async () => {
-      const devChannel = `dev/${versionRef}`;
-      await gitCall("fetch");
-      await gitCall("switch", "-c", devChannel, `origin/${devChannel}`);
-      await gitCall("tag", "-d", `v${newVersion}`);
-      await bumpCall("prepatch", argv, `Update ${devChannel} to work on ${newVersion}`);
-      await gitCall("push", "origin", `HEAD:${devChannel}`);
-      await gitCall("switch", argv.baseRef);
-    }
-  };
-  await liftDevChannel[keyword]();
+  if (keyword == "patch") {
+    // Prepare new prerelease version for dev channel
+    const devChannel = `dev/${versionRef}`;
+    await gitCall("fetch");
+    await gitCall("switch", "-c", devChannel, `origin/${devChannel}`);
+    await gitCall("tag", "-d", `v${newVersion}`);
+    await bumpCall("prepatch", argv, `Update ${devChannel} to work on ${newVersion}`);
+    await gitCall("push", "origin", `HEAD:${devChannel}`);
+    await gitCall("switch", argv.baseRef);
+  }
 }
 
 const BumpActions = {
