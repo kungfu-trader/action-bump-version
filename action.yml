@@ -3,19 +3,17 @@ author: "Keren Dong"
 description: "Bump version for Kungfu projects"
 inputs:
   token:
-    description: "Use secrets.GITHUB_TOKEN"
+    description: "E.g. secrets.GITHUB_TOKEN"
     required: true
   head-ref:
-    description: "Head git ref of the pull request, e.g. dev/v1/v1.1"
-    required: true
+    description: "Defaults to github.head_ref"
   base-ref:
-    description: "Base git ref of the pull request, e.g. alpha/v1/v1.1"
-    required: true
+    description: "Defaults to github.base_ref"
   keyword:
-    description: "choices [auto/patch/premajor/preminor/prerelease]"
+    description: "Choices [auto/patch/premajor/preminor/prerelease]"
     default: "auto"
   action:
-    description: "choices [auto/bump/publish/verify/protect]"
+    description: "Choices [auto/bump/publish/prebuild/postbuild/verify]"
     default: "auto"
 runs:
   using: "node12"

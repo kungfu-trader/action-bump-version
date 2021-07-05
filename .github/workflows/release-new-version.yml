@@ -1,14 +1,14 @@
-name: Bump Version - Run
+name: Release - New Version
 on:
   pull_request:
     types: [closed]
     branches:
       - alpha/v*/v*
       - release/v*/v*
-      - main
 
 jobs:
   bump:
+    if: ${{ github.event.pull_request.merged }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,5 +19,3 @@ jobs:
         uses: kungfu-trader/action-bump-version@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          head-ref: ${{ github.head_ref}}
-          base-ref: ${{ github.base_ref }}
