@@ -157,13 +157,17 @@ function getBumpKeyword(cwd, headRef, baseRef) {
   return keywords[key];
 }
 
-function exec(cmd, args) {
+function exec(cmd, args = []) {
   console.log("$", cmd, ...args);
   if (bumpOpts.dry) {
     return;
   }
-  const output = spawnSync(cmd, args, spawnOpts).output;
-  console.log(output.toString());
+  const result = spawnSync(cmd, args, spawnOpts);
+  const output = result.output.filter(e => e && e.length > 0).toString();
+  console.log(output);
+  if (result.status != 0) {
+    throw new Error(`Failed with status ${result.status}`);
+  }
 }
 
 async function bumpCall(keyword, argv, message) {
@@ -223,7 +227,7 @@ async function mergeCall(keyword, argv) {
   };
   await pushback[keyword]();
 
-  const newVersion = getCurrentVersion(argv.cwd);
+  const newVersion = getCurrentVersion(argv.cwd); // Version might be changed after patch bump
   const octokit = github.getOctokit(argv.token);
 
   const { data: latestRef } = await octokit.rest.git.getRef({
@@ -281,6 +285,7 @@ async function mergeCall(keyword, argv) {
       const devChannel = `dev/${versionRef}`;
       await gitCall("fetch");
       await gitCall("switch", "-c", devChannel, `origin/${devChannel}`);
+      await gitCall("tag", "-d", `v${newVersion}`);
       await bumpCall("prepatch", argv, `Update ${devChannel} to version ${newVersion}`);
       await gitCall("push", "origin", `HEAD:${devChannel}`);
       await gitCall("switch", argv.baseRef);
