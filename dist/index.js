@@ -178,7 +178,6 @@ function exec(cmd, args = []) {
 
 async function bumpCall(keyword, argv, message) {
   const version = getCurrentVersion(argv.cwd);
-  const nextVersion = semver.inc(version, keyword, 'alpha');
   const updateTag = {
     "premajor": async () => { },
     "preminor": async () => { },
@@ -192,7 +191,8 @@ async function bumpCall(keyword, argv, message) {
   };
   await updateTag[keyword]();
 
-  const nonReleaseMessageOpt = ["--message", message ? `"${message}"` : `"Move on to v${nextVersion}"`];
+  semver.inc(version, keyword, 'alpha');
+  const nonReleaseMessageOpt = ["--message", message ? `"${message}"` : `"Move on to v${version}"`];
   const messageOpt = keyword == "patch" ? [] : nonReleaseMessageOpt;
 
   if (hasLerna(argv.cwd)) {
