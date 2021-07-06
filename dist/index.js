@@ -61,10 +61,11 @@ const main = async function () {
     const baseRef = process.env.GITHUB_BASE_REF || process.env.GITHUB_REF;
     const argv = {
         cwd: process.cwd(),
-        token: core.getInput('token'),
         owner: context.repo.owner,
         repo: context.repo.repo,
         actor: context.actor,
+        token: core.getInput('token'),
+        action: core.getInput('action'),
         headRef: headRef,
         baseRef: baseRef,
         keyword: lib.getBumpKeyword({ cwd: process.cwd(), headRef: headRef, baseRef: baseRef})
@@ -73,7 +74,7 @@ const main = async function () {
     core.setOutput("keyword", argv.keyword);
     core.setOutput("last-version", `v${lib.currentVersion()}`);
     await setup(argv);
-    await actions[core.getInput('action')](argv);
+    await actions[argv.action](argv);
     const version = lib.currentVersion();
     core.setOutput("version", `v${version}`);
 };
