@@ -69,6 +69,7 @@ const main = async function () {
         actor: context.actor,
         token: core.getInput('token'),
         action: core.getInput('action'),
+        publish: !!core.getInput('no-publish'),
         headRef: headRef,
         baseRef: baseRef,
         keyword: lib.getBumpKeyword({ cwd: process.cwd(), headRef: headRef, baseRef: baseRef }),
@@ -323,7 +324,8 @@ exports.getBumpKeyword = (argv) => getBumpKeyword(argv.cwd, argv.headRef, argv.b
 exports.tryBump = (argv) => bumpCall(argv, getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef));
 
 exports.tryPublish = async (argv) => {
-  if (process.env.NODE_AUTH_TOKEN) {
+  if (argv.publish) {
+    process.env.NODE_AUTH_TOKEN = argv.token;
     const keyword = getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef);
     if (keyword == "patch" || keyword == "prerelease") {
       publishCall(argv);
