@@ -23,7 +23,7 @@ const setup = exports.setup = async function (argv) {
             repo: argv.repo,
             pull_number: context.payload.pull_request.number
         });
-        if (action != "verify" && !pullRequest.merged) {
+        if (argv.action != "verify" && !pullRequest.merged) {
             throw new Error(`Pull request #${pullRequest.number} [${pullRequest.html_url}]  must be merged`);
         }
     }
