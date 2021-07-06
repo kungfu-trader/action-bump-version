@@ -14,8 +14,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Setup NPM registry
+        uses: actions/setup-node@v2
+        with:
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@kungfu-trader'
+
       - name: Bump Version
         if: ${{ github.event.pull_request.merged }}
         uses: kungfu-trader/action-bump-version@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
