@@ -5,15 +5,8 @@ inputs:
   token:
     description: "E.g. secrets.GITHUB_TOKEN"
     required: true
-  head-ref:
-    description: "Defaults to github.head_ref"
-  base-ref:
-    description: "Defaults to github.base_ref"
-  keyword:
-    description: "Choices [auto/patch/premajor/preminor/prerelease]"
-    default: "auto"
   action:
-    description: "Choices [auto/bump/publish/prebuild/postbuild/verify]"
+    description: "Choices [auto/prebuild/postbuild/verify]"
     default: "auto"
 runs:
   using: "node12"
