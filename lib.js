@@ -142,10 +142,9 @@ async function mergeCall(argv, keyword) {
       await bumpCall(argv, "prerelease");
       await pushAlphaVersionTag(getCurrentVersion(argv.cwd));
     },
-    "preprelease": async (version) => gitCall("push", "-f", "origin", `HEAD~1:refs/tags/v${version}`)
+    "prerelease": async (version) => gitCall("push", "-f", "origin", `HEAD~1:refs/tags/v${version}`)
   };
 
-  console.log(`pushVersionTags[${keyword}] = ${pushVersionTags[keyword]}`);
   await pushVersionTags[keyword](headVersion);
 
   const currentVersion = getCurrentVersion(argv.cwd); // Version might be changed after patch bump
