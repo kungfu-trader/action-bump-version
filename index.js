@@ -35,7 +35,7 @@ const prebuild = async (argv) => {
 const postbuild = async (argv) => {
     await lib.tryPublish(argv);
     if (lib.getBumpKeyword(argv) != "patch") {
-        // Text prerelease version commit must be made after build to update tracking branches.
+        // The next prerelease version commit must be made after build to update tracking branches.
         await lib.tryBump(argv);
     }
     await lib.tryMerge(argv);
@@ -64,15 +64,15 @@ const main = async function () {
         action: core.getInput('action'),
         headRef: headRef,
         baseRef: baseRef,
-        keyword: lib.getBumpKeyword({ cwd: process.cwd(), headRef: headRef, baseRef: baseRef })
+        keyword: lib.getBumpKeyword({ cwd: process.cwd(), headRef: headRef, baseRef: baseRef }),
+        version: lib.currentVersion()
     };
 
     core.setOutput("keyword", argv.keyword);
     core.setOutput("last-version", `v${lib.currentVersion()}`);
     await setup(argv);
     await actions[argv.action](argv);
-    const version = lib.currentVersion();
-    core.setOutput("version", `v${version}`);
+    core.setOutput("version", `v${lib.currentVersion()}`);
 };
 
 if (process.env.GITHUB_ACTION) {
