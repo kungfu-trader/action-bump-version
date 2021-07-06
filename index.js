@@ -1,5 +1,6 @@
 const lib = exports.lib = require("./lib.js");
 const fs = require("fs");
+const path = require("path");
 const core = require('@actions/core');
 const github = require("@actions/github");
 
@@ -77,7 +78,8 @@ const main = async function () {
 };
 
 if (process.env.GITHUB_ACTION) {
-    const config = JSON.parse(fs.readFileSync('package.json'));
+    const configPath = path.join(path.dirname(__dirname), 'package.json');
+    const config = JSON.parse(fs.readFileSync(configPath));
     if (process.env.GITHUB_ACTION_REPOSITORY == config.name.slice(1)) {
         main().catch((error) => {
             console.error(error);

@@ -7,6 +7,7 @@ module.exports =
 
 const lib = exports.lib = __nccwpck_require__(2909);
 const fs = __nccwpck_require__(5747);
+const path = __nccwpck_require__(5622);
 const core = __nccwpck_require__(2186);
 const github = __nccwpck_require__(5438);
 
@@ -84,7 +85,8 @@ const main = async function () {
 };
 
 if (process.env.GITHUB_ACTION) {
-    const config = JSON.parse(fs.readFileSync('package.json'));
+    const configPath = path.join(path.dirname(__dirname), 'package.json');
+    const config = JSON.parse(fs.readFileSync(configPath));
     if (process.env.GITHUB_ACTION_REPOSITORY == config.name.slice(1)) {
         main().catch((error) => {
             console.error(error);
