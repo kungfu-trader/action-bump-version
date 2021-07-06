@@ -15,7 +15,7 @@ const handleError = (error) => {
 };
 
 const setup = exports.setup = async function (argv) {
-    const octokit = github.context.getOctokit(argv.token);
+    const octokit = github.getOctokit(argv.token);
     if (context.eventName == "pull_request") {
         const { data: pullRequest } = await octokit.rest.pulls.get({
             owner: argv.owner,
