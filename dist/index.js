@@ -66,7 +66,7 @@ const main = async function () {
         actor: context.actor,
         headRef: headRef,
         baseRef: baseRef,
-        keyword: lib.getBumpKeyword(process.cwd(), headRef, baseRef)
+        keyword: lib.getBumpKeyword({ cwd: process.cwd(), headRef: headRef, baseRef: baseRef})
     };
 
     core.setOutput("keyword", argv.keyword);
