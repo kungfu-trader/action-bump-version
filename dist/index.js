@@ -3,95 +3,85 @@ module.exports =
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 2932:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
+const lib = exports.lib = __nccwpck_require__(2909);
 const core = __nccwpck_require__(2186);
 const github = __nccwpck_require__(5438);
-const lib = __nccwpck_require__(2909);
-
-const context = github.context;
-
-const token = core.getInput('token');
-const action = core.getInput('action');
-const headRef = core.getInput('head-ref') || process.env.GITHUB_HEAD_REF;
-const baseRef = core.getInput('base-ref') || process.env.GITHUB_BASE_REF;
-const keyword = core.getInput('keyword');
 
 const handleError = (error) => {
     console.error(error);
     core.setFailed(error.message);
 };
 
-const argv = {
-    cwd: process.cwd(),
-    token: token,
-    owner: context.repo.owner,
-    repo: context.repo.repo,
-    headRef: headRef,
-    baseRef: baseRef,
-    keyword: keyword
-};
-
-const octokit = github.getOctokit(argv.token);
-
-async function setup() {
+const setup = exports.setup = async function (argv) {
+    const context = github.context;
+    const octokit = github.getOctokit(argv.token);
     if (context.eventName == "pull_request") {
         const { data: pullRequest } = await octokit.rest.pulls.get({
             owner: argv.owner,
             repo: argv.repo,
             pull_number: context.payload.pull_request.number
         });
-        if (action != "verify" && !pullRequest.merged) {
+        if (argv.action != "verify" && !pullRequest.merged) {
             throw new Error(`Pull request #${pullRequest.number} [${pullRequest.html_url}]  must be merged`);
         }
     }
     if (context.eventName == "workflow_dispatch") {
-        if (headRef != "main" || headRef != baseRef) {
-            throw new Error(`Manual trigger on head [${headRef}] -> base [${baseRef}] not supported`);
+        if (argv.headRef != "main" || argv.baseRef != "main") {
+            throw new Error(`Manual trigger on head [${argv.headRef}] -> base [${argv.baseRef}] not supported`);
         }
     }
-    await lib.gitCall("config", "--global", "user.name", context.actor);
-    await lib.gitCall("config", "--global", "user.email", `${context.actor}@users.noreply.github.com`);
-}
+    await lib.gitCall("config", "--global", "user.name", argv.actor);
+    await lib.gitCall("config", "--global", "user.email", `${argv.actor}@users.noreply.github.com`);
+};
 
-const run = {
-    "auto": async () => {
+const actions = exports.actions = {
+    "auto": async (argv) => {
         await lib.tryBump(argv);
         await lib.tryMerge(argv);
     },
-    "bump": async () => {
-        await lib.tryBump(argv);
-    },
-    "publish": async () => {
-        await lib.tryMerge(argv);
-    },
-    "prebuild": async () => {
+    "prebuild": async (argv) => {
         if (lib.getBumpKeyword(argv) == "patch") {
             await lib.tryBump(argv);
         }
     },
-    "postbuild": async () => {
+    "postbuild": async (argv) => {
         if (lib.getBumpKeyword(argv) != "patch") {
             await lib.tryBump(argv);
         }
         await lib.tryMerge(argv);
     },
-    "verify": async () => {
-        lib.verify(argv);
-    }
+    "verify": async (argv) => lib.verify(argv)
 };
 
-async function main() {
-    core.setOutput("keyword", lib.getBumpKeyword(argv));
-    core.setOutput("last-version", lib.currentVersion().toString());
-    await setup();
-    await run[action]();
+const main = async function () {
+    const context = github.context;
+    const headRef = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF;
+    const baseRef = process.env.GITHUB_BASE_REF || process.env.GITHUB_REF;
+    const argv = {
+        cwd: process.cwd(),
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        actor: context.actor,
+        token: core.getInput('token'),
+        action: core.getInput('action'),
+        headRef: headRef,
+        baseRef: baseRef,
+        keyword: lib.getBumpKeyword({ cwd: process.cwd(), headRef: headRef, baseRef: baseRef})
+    };
+
+    core.setOutput("keyword", argv.keyword);
+    core.setOutput("last-version", `v${lib.currentVersion()}`);
+    await setup(argv);
+    await actions[argv.action](argv);
     const version = lib.currentVersion();
     core.setOutput("version", `v${version}`);
-    core.setOutput("tags", [`v${version}`, `v${version.major}`, `v${version.major}.${version.minor}`]);
-}
+};
 
-main().catch(handleError);
+if (process.env.GITHUB_ACTION) {
+    main().catch(handleError);
+}
 
 /***/ }),
 
@@ -214,16 +204,19 @@ async function mergeCall(keyword, argv) {
   const version = getCurrentVersion(argv.cwd);
 
   const pushTag = (tag) => gitCall("push", "-f", "origin", `HEAD:refs/tags/${tag}`);
+  const pushAlphaVersionTag = (v) => pushTag(`v${getLooseVersion(v)}-alpha`);
+  const pushLooseVersionTag = (v) => pushTag(`v${getLooseVersion(v)}`);
   const pushMajorVersionTag = (v) => octokit.rest.git.getRef({
     owner: argv.owner,
     repo: argv.repo,
     ref: `tags/v${v.major}.${v.minor + 1}`
   }).catch(() => pushTag(`v${v.major}`));
-  const pushLooseVersionTag = (v) => pushTag(`v${getLooseVersion(v)}`);
 
-  await pushLooseVersionTag(version);
+  await pushAlphaVersionTag(version);
 
   if (keyword == "patch") {
+    // Track loose version ${major.minor} on release channel
+    await pushLooseVersionTag(version);
     // Track major version on release channel
     await pushMajorVersionTag(version);
     // Make release commit and tag
@@ -231,16 +224,16 @@ async function mergeCall(keyword, argv) {
     await gitCall("push", "-f", "origin", `HEAD:refs/heads/${argv.baseRef}`);
     // Prepare new prerelease version for alpha channel
     await bumpCall("prerelease", argv);
-    await pushLooseVersionTag(getCurrentVersion(argv.cwd));
+    await pushAlphaVersionTag(getCurrentVersion(argv.cwd));
   }
 
   const newVersion = getCurrentVersion(argv.cwd); // Version might be changed after patch bump
   const looseVersion = getLooseVersion(newVersion);
 
-  const { data: looseVersionRef } = await octokit.rest.git.getRef({
+  const { data: alphaVersionRef } = await octokit.rest.git.getRef({
     owner: argv.owner,
     repo: argv.repo,
-    ref: `tags/v${looseVersion}`
+    ref: `tags/v${looseVersion}-alpha`
   });
 
   const mergeRemoteChannel = async (channelRef) => {
@@ -256,13 +249,13 @@ async function mergeCall(keyword, argv) {
       owner: argv.owner,
       repo: argv.repo,
       ref: `refs/heads/${channelRef}`,
-      sha: looseVersionRef.object.sha
+      sha: alphaVersionRef.object.sha
     }));
     const merge = await octokit.rest.repos.merge({
       owner: argv.owner,
       repo: argv.repo,
       base: branch.ref,
-      head: looseVersionRef.object.sha,
+      head: alphaVersionRef.object.sha,
       commit_message: `Update ${channelRef} to work on ${newVersion}`
     });
     if (merge.status != 201 && merge.status != 204) {
@@ -296,22 +289,6 @@ async function mergeCall(keyword, argv) {
   }
 }
 
-const BumpActions = {
-  "auto": (argv) => bumpCall(getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef), argv),
-  "patch": (argv) => bumpCall("patch", argv),
-  "premajor": (argv) => bumpCall("premajor", argv),
-  "preminor": (argv) => bumpCall("preminor", argv),
-  "prerelease": (argv) => bumpCall("prerelease", argv)
-};
-
-const MergeActions = {
-  "auto": (argv) => mergeCall(getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef, true), argv),
-  "patch": (argv) => mergeCall("patch", argv),
-  "premajor": (argv) => mergeCall("premajor", argv),
-  "preminor": (argv) => mergeCall("preminor", argv),
-  "prerelease": (argv) => mergeCall("prerelease", argv)
-};
-
 exports.exec = exec;
 
 exports.gitCall = gitCall;
@@ -324,9 +301,9 @@ exports.currentVersion = () => getCurrentVersion(process.cwd());
 
 exports.getBumpKeyword = (argv) => getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef);
 
-exports.tryBump = (argv) => BumpActions[argv.keyword](argv);
+exports.tryBump = (argv) => bumpCall(getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef), argv);
 
-exports.tryMerge = (argv) => MergeActions[argv.keyword](argv);
+exports.tryMerge = (argv) => mergeCall(getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef, true), argv);
 
 exports.verify = (argv) => {
   const keyword = getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef);
