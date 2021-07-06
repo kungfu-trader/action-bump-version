@@ -142,7 +142,7 @@ async function mergeCall(argv, keyword) {
       await bumpCall(argv, "prerelease");
       await pushAlphaVersionTag(getCurrentVersion(argv.cwd));
     },
-    "prerelease": async (version) => gitCall("push", "-f", "origin", `HEAD~1:refs/tags/v${argv.headVersion}`)
+    "prerelease": async (version) => gitCall("push", "-f", "origin", `HEAD~1:refs/tags/v${argv.version}`)
   };
 
   await pushVersionTags[keyword](headVersion);
