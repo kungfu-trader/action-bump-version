@@ -21,7 +21,6 @@ jobs:
           scope: '@kungfu-trader'
 
       - name: Bump Version
-        if: ${{ github.event.pull_request.merged }}
         uses: kungfu-trader/action-bump-version@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
