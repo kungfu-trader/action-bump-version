@@ -64,7 +64,8 @@ const main = async function () {
         action: core.getInput('action'),
         headRef: headRef,
         baseRef: baseRef,
-        keyword: lib.getBumpKeyword({ cwd: process.cwd(), headRef: headRef, baseRef: baseRef })
+        keyword: lib.getBumpKeyword({ cwd: process.cwd(), headRef: headRef, baseRef: baseRef }),
+        headVersion: lib.currentVersion()
     };
 
     core.setOutput("keyword", argv.keyword);
