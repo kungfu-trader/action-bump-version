@@ -224,7 +224,8 @@ exports.getBumpKeyword = (argv) => getBumpKeyword(argv.cwd, argv.headRef, argv.b
 exports.tryBump = (argv) => bumpCall(argv, getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef));
 
 exports.tryPublish = async (argv) => {
-  if (process.env.NODE_AUTH_TOKEN) {
+  if (argv.publish) {
+    process.env.NODE_AUTH_TOKEN = argv.token;
     const keyword = getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef);
     if (keyword == "patch" || keyword == "prerelease") {
       publishCall(argv);
