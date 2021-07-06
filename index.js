@@ -27,10 +27,12 @@ const setup = exports.setup = async function (argv) {
 };
 
 const prebuild = async (argv) => {
+    core.setOutput("prebuild-version", `v${lib.currentVersion()}`);
     if (lib.getBumpKeyword(argv) == "patch") {
         // The release version commit must be made before build to have the right release info.
         await lib.tryBump(argv);
     }
+    core.setOutput("version", `v${lib.currentVersion()}`);
 };
 
 const postbuild = async (argv) => {
@@ -40,6 +42,7 @@ const postbuild = async (argv) => {
         await lib.tryBump(argv);
     }
     await lib.tryMerge(argv);
+    core.setOutput("postbuild-version", `v${lib.currentVersion()}`);
 };
 
 const actions = exports.actions = {
@@ -71,10 +74,8 @@ const main = async function () {
     };
 
     core.setOutput("keyword", argv.keyword);
-    core.setOutput("last-version", `v${lib.currentVersion()}`);
     await setup(argv);
     await actions[argv.action](argv);
-    core.setOutput("version", `v${lib.currentVersion()}`);
 };
 
 if (process.env.GITHUB_ACTION) {
