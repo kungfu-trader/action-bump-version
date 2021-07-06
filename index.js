@@ -62,6 +62,7 @@ const main = async function () {
         actor: context.actor,
         token: core.getInput('token'),
         action: core.getInput('action'),
+        publish: !!core.getInput('no-publish'),
         headRef: headRef,
         baseRef: baseRef,
         keyword: lib.getBumpKeyword({ cwd: process.cwd(), headRef: headRef, baseRef: baseRef }),
