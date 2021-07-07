@@ -24,7 +24,7 @@ exports.argv = require("yargs/yargs")(process.argv.slice(2))
     })
     .command("merge <keyword>", "merge", (yargs) => {
         yargs.positional("keyword", {
-            description: "Increment version(s) by semver keyword",
+            description: "Merge downstreamp channels",
             type: "string",
             choices: keywords,
             demandOption: true
@@ -37,6 +37,16 @@ exports.argv = require("yargs/yargs")(process.argv.slice(2))
     }, (argv) => {
         lib.setOpts(argv);
         lib.verify(argv);
+    })
+    .command("enable-protect", "enable branches protect", (yargs) => {
+    }, (argv) => {
+        lib.setOpts(argv);
+        lib.enableBranchesProtection(argv).catch(console.error);
+    })
+    .command("disable-protect", "disable branches protect", (yargs) => {
+    }, (argv) => {
+        lib.setOpts(argv);
+        lib.disableBranchesProtection(argv).catch(console.error);
     })
     .demandCommand()
     .help()
