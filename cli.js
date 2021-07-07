@@ -24,7 +24,7 @@ exports.argv = require("yargs/yargs")(process.argv.slice(2))
     })
     .command("merge <keyword>", "merge", (yargs) => {
         yargs.positional("keyword", {
-            description: "Increment version(s) by semver keyword",
+            description: "Merge downstream channels",
             type: "string",
             choices: keywords,
             demandOption: true
