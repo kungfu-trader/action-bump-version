@@ -222,7 +222,115 @@ async function publishCall(argv) {
   }
 }
 
+async function getBranchProtectionRulesMap(argv) {
+  const ruleIds = {};
+  const protectedBranchPatterns = ["main", "release/*/*", "alpha/*/*", "dev/*/*"];
+  const octokit = github.getOctokit(argv.token);
+
+  const { repository } = await octokit.graphql(`query{repository(name:"${argv.repo}",owner:"${argv.owner}"){id}}`);
+
+  const rulesQuery = await octokit.graphql(`
+        query {
+          repository(name: "${argv.repo}", owner: "${argv.owner}") {
+            branchProtectionRules(first:100) {
+              nodes {
+                id
+                creator { login }
+                pattern
+              }
+            }
+          }
+        }`);
+
+  for (const rule of rulesQuery.repository.branchProtectionRules.nodes) {
+    ruleIds[rule.pattern] = rule.id;
+  }
+
+  for (const pattern of protectedBranchPatterns.filter(p => !(p in ruleIds))) {
+    console.log(`> creating branch protection rule for pattern ${pattern}`);
+    const { createBranchProtectionRule } = await octokit.graphql(`
+      mutation {
+        createBranchProtectionRule(input: {
+          repositoryId: "${repository.id}"
+          pattern: "${pattern}"
+        }) {
+          branchProtectionRule { id }
+        }
+      }
+    `);
+    ruleIds[pattern] = createBranchProtectionRule.branchProtectionRule.id;
+  }
+  return ruleIds;
+}
+
+async function enableBranchesProtection(argv) {
+  const octokit = github.getOctokit(argv.token);
+  const ruleIds = await getBranchProtectionRulesMap(argv);
+  for (const pattern in ruleIds) {
+    const id = ruleIds[pattern];
+    const restrictsPushes = pattern.split('/')[0] != "dev";
+    const mutation = `
+      mutation {
+        updateBranchProtectionRule(input: {
+          branchProtectionRuleId: "${id}"
+          requiresApprovingReviews: ${restrictsPushes},
+          requiredApprovingReviewCount: ${restrictsPushes ? 1 : 0},
+          dismissesStaleReviews: true,
+          restrictsReviewDismissals: true,
+          requiresStatusChecks: true,
+          requiresStrictStatusChecks: true,
+          requiresConversationResolution: true,
+          isAdminEnforced: true,
+          restrictsPushes: ${restrictsPushes},
+          allowsForcePushes: false,
+          allowsDeletions: false
+        }) { clientMutationId }
+      }
+    `;
+    console.log(`> enable branch protection for pattern ${pattern} with id ${id}`);
+    if (bumpOpts.dry) {
+      console.log(mutation);
+      continue;
+    }
+    await octokit.graphql(mutation);
+  }
+}
+
+async function disableBranchesProtection(argv) {
+  const octokit = github.getOctokit(argv.token);
+  const ruleIds = await getBranchProtectionRulesMap(argv);
+  for (const pattern in ruleIds) {
+    const id = ruleIds[pattern];
+    const mutation = `
+      mutation {
+        updateBranchProtectionRule(input: {
+          branchProtectionRuleId: "${id}"
+          requiresApprovingReviews: false,
+          requiredApprovingReviewCount: 0,
+          dismissesStaleReviews: false,
+          restrictsReviewDismissals: false,
+          requiresStatusChecks: false,
+          requiresStrictStatusChecks: false,
+          requiresConversationResolution: false,
+          isAdminEnforced: true,
+          restrictsPushes: false,
+          allowsForcePushes: true,
+          allowsDeletions: false
+        }) { clientMutationId }
+      }
+    `;
+    console.log(`> disable branch protection for pattern ${pattern} with id ${id}`);
+    if (bumpOpts.dry) {
+      console.log(mutation);
+      continue;
+    }
+    await octokit.graphql(mutation);
+  }
+}
+
 async function mergeCall(argv, keyword) {
+  await enableBranchesProtection(argv).catch(console.error);
+
   const octokit = github.getOctokit(argv.token);
   const headVersion = getCurrentVersion(argv.cwd);
 
@@ -322,6 +430,8 @@ async function mergeCall(argv, keyword) {
     await gitCall("push", "origin", `HEAD:${devChannel}`);
     await gitCall("switch", argv.baseRef);
   }
+
+  await disableBranchesProtection(argv).catch(console.error);
 }
 
 exports.getChannel = getChannel;
@@ -329,6 +439,10 @@ exports.getChannel = getChannel;
 exports.exec = exec;
 
 exports.gitCall = gitCall;
+
+exports.enableBranchesProtection = enableBranchesProtection;
+
+exports.disableBranchesProtection = disableBranchesProtection;
 
 exports.setOpts = function (argv) {
   bumpOpts.dry = argv.dry;
