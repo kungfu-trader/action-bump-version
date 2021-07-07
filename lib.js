@@ -231,7 +231,7 @@ async function mergeCall(argv, keyword) {
   const pushTargets = {
     "premajor": ["release", "alpha", "dev"],
     "preminor": ["release", "alpha", "dev"],
-    "patch": ["alpha", "dev"],
+    "patch": ["release", "alpha", "dev"],
     "prerelease": ["dev"]
   };
   const branchPatterns = pushTargets[keyword].map(p => `${p}/*/*`);
