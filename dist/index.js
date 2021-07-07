@@ -137,10 +137,14 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
     "dev->alpha": "prerelease",
     "alpha->release": "patch",
     "release->main": "preminor",
+    "release->release": "preminor",
     "main->main": "premajor"
   };
 
-  if (headRef.replace(headChannel, "") !== baseRef.replace(baseChannel, "") && baseChannel != "main") {
+  const lts = baseChannel == "release" && baseRef.split('/').pop() == 'lts';
+  const preminor = (headChannel == "release") && (baseChannel == "main" || lts);
+
+  if (headRef.replace(headChannel, "") !== baseRef.replace(baseChannel, "") && !preminor) {
     throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
   }
 
@@ -230,7 +234,9 @@ async function mergeCall(argv, keyword) {
   await pushAlphaVersionTag(headVersion);
 
   const pushVersionTags = {
-    "premajor": async (version) => { },
+    "premajor": async (version) => {
+      await gitCall("push", "-f", "origin", `HEAD~1:refs/heads/release/v${argv.version.major}/lts`);
+    },
     "preminor": async (version) => { },
     "patch": async (version) => {
       // Track loose version ${major.minor} on release channel
@@ -245,7 +251,9 @@ async function mergeCall(argv, keyword) {
       await bumpCall(argv, "prerelease");
       await pushAlphaVersionTag(getCurrentVersion(argv.cwd));
     },
-    "prerelease": async (version) => gitCall("push", "-f", "origin", `HEAD~1:refs/tags/v${argv.version}`)
+    "prerelease": async (version) => {
+      await gitCall("push", "-f", "origin", `HEAD~1:refs/tags/v${argv.version}`);
+    }
   };
 
   await pushVersionTags[keyword](headVersion);
