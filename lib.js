@@ -6,8 +6,11 @@ const git = require('git-client');
 const semver = require('semver');
 const { spawnSync } = require("child_process");
 
+const ProtectedBranchPatterns = ["main", "release/*/*", "alpha/*/*", "dev/*/*"];
+
 const bumpOpts = { dry: false };
 const spawnOpts = { shell: true, stdio: "pipe", windowsHide: true };
+
 
 function hasLerna(cwd) {
   return fs.existsSync(path.join(cwd, "lerna.json"));
@@ -121,7 +124,6 @@ async function publishCall(argv) {
 
 async function getBranchProtectionRulesMap(argv) {
   const ruleIds = {};
-  const protectedBranchPatterns = ["main", "release/*/*", "alpha/*/*", "dev/*/*"];
   const octokit = github.getOctokit(argv.token);
 
   const { repository } = await octokit.graphql(`query{repository(name:"${argv.repo}",owner:"${argv.owner}"){id}}`);
@@ -143,7 +145,7 @@ async function getBranchProtectionRulesMap(argv) {
     ruleIds[rule.pattern] = rule.id;
   }
 
-  for (const pattern of protectedBranchPatterns.filter(p => !(p in ruleIds))) {
+  for (const pattern of ProtectedBranchPatterns.filter(p => !(p in ruleIds))) {
     console.log(`> creating branch protection rule for pattern ${pattern}`);
     const { createBranchProtectionRule } = await octokit.graphql(`
       mutation {
@@ -193,10 +195,10 @@ async function enableBranchesProtection(argv) {
   }
 }
 
-async function disableBranchesProtection(argv) {
+async function disableBranchesProtection(argv, branchPatterns = ProtectedBranchPatterns) {
   const octokit = github.getOctokit(argv.token);
   const ruleIds = await getBranchProtectionRulesMap(argv);
-  for (const pattern in ruleIds) {
+  for (const pattern of branchPatterns) {
     const id = ruleIds[pattern];
     const mutation = `
       mutation {
@@ -226,7 +228,14 @@ async function disableBranchesProtection(argv) {
 }
 
 async function mergeCall(argv, keyword) {
-  await disableBranchesProtection(argv).catch(console.error);
+  const pushTargets = {
+    "premajor": ["release", "alpha", "dev"],
+    "preminor": ["release", "alpha", "dev"],
+    "patch": ["alpha", "dev"],
+    "prerelease": ["dev"]
+  };
+  const branchPatterns = pushTargets[keyword].map(p => `${p}/*/*`);
+  await disableBranchesProtection(argv, branchPatterns).catch(console.error);
 
   const octokit = github.getOctokit(argv.token);
   const headVersion = getCurrentVersion(argv.cwd);
