@@ -15,7 +15,7 @@
 
 首先我们基于 GitHub 的 [Pull Request](https://docs.github.com/en/github/collaborating-with-pull-requests) 特性进行版本发布操作，这可以在 Web 页面上完成从发布到审核的所有操作。同时利用关联到相关 GitHub 事件的 [Action](https://docs.github.com/en/actions) 进行自动版本信息维护操作，以避免人工操作带来的手误风险。
 
-由于 GitHub 事件可以在任意分支上触发，为精确控制行为，我们需要做一些限定。具体来说，我们在以下几个分支进行版本管理工作：
+由于 GitHub 事件可以在任意分支上触发，为精确控制行为，我们需要做一些限定。具体来说，我们在以下几个分支系列进行版本管理工作：
 
 - dev/v(\d+)/v(\d+).(\d+)
 - release/v(\d+)/v(\d+).(\d+)
