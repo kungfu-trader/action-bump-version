@@ -329,7 +329,7 @@ async function disableBranchesProtection(argv) {
 }
 
 async function mergeCall(argv, keyword) {
-  await enableBranchesProtection(argv).catch(console.error);
+  await disableBranchesProtection(argv).catch(console.error);
 
   const octokit = github.getOctokit(argv.token);
   const headVersion = getCurrentVersion(argv.cwd);
@@ -431,7 +431,7 @@ async function mergeCall(argv, keyword) {
     await gitCall("switch", argv.baseRef);
   }
 
-  await disableBranchesProtection(argv).catch(console.error);
+  await enableBranchesProtection(argv).catch(console.error);
 }
 
 exports.getChannel = getChannel;
