@@ -130,8 +130,8 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
   const version = getCurrentVersion(cwd);
   const looseVersionNumber = Number(getLooseVersion(version));
   const lastLooseVersionNumber = looseVersionNumber - 0.1;
-  const headChannel = headRef.split('/')[0];
-  const baseChannel = baseRef.split('/')[0];
+  const headChannel = headRef.replace(/^refs\/heads\//, '').split('/')[0];
+  const baseChannel = baseRef.replace(/^refs\/heads\//, '').split('/')[0];
   const key = `${headChannel}->${baseChannel}`;
   const keywords = {
     "dev->alpha": "prerelease",
