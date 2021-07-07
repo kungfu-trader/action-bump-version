@@ -25,7 +25,7 @@ const setup = exports.setup = async function (argv) {
         }
     }
     if (context.eventName == "workflow_dispatch") {
-        if (argv.headRef != "main" || argv.baseRef != "main") {
+        if (lib.getChannel(argv.headRef) != "main" || lib.getChannel(argv.baseRef) != "main") {
             throw new Error(`Manual trigger on head [${argv.headRef}] -> base [${argv.baseRef}] not supported`);
         }
     }
@@ -126,12 +126,16 @@ function getLooseVersion(version) {
   return `${version.major}.${version.minor}`;
 }
 
+function getChannel(ref) {
+  return ref.replace(/^refs\/heads\//, '').split('/')[0];
+}
+
 function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
   const version = getCurrentVersion(cwd);
   const looseVersionNumber = Number(getLooseVersion(version));
   const lastLooseVersionNumber = looseVersionNumber - 0.1;
-  const headChannel = headRef.replace(/^refs\/heads\//, '').split('/')[0];
-  const baseChannel = baseRef.replace(/^refs\/heads\//, '').split('/')[0];
+  const headChannel = getChannel(headRef);
+  const baseChannel = getChannel(baseRef);
   const key = `${headChannel}->${baseChannel}`;
   const keywords = {
     "dev->alpha": "prerelease",
@@ -319,6 +323,8 @@ async function mergeCall(argv, keyword) {
     await gitCall("switch", argv.baseRef);
   }
 }
+
+exports.getChannel = getChannel;
 
 exports.exec = exec;
 

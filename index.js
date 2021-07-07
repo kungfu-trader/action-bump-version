@@ -18,7 +18,7 @@ const setup = exports.setup = async function (argv) {
         }
     }
     if (context.eventName == "workflow_dispatch") {
-        if (argv.headRef != "main" || argv.baseRef != "main") {
+        if (lib.getChannel(argv.headRef) != "main" || lib.getChannel(argv.baseRef) != "main") {
             throw new Error(`Manual trigger on head [${argv.headRef}] -> base [${argv.baseRef}] not supported`);
         }
     }
