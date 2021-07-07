@@ -74,6 +74,7 @@ const main = async function () {
         token: core.getInput('token'),
         action: core.getInput('action'),
         publish: !!core.getInput('no-publish'),
+        protection: !!core.getInput('no-protection'),
         headRef: headRef,
         baseRef: baseRef,
         keyword: lib.getBumpKeyword({ cwd: process.cwd(), headRef: headRef, baseRef: baseRef }),
@@ -266,6 +267,8 @@ async function getBranchProtectionRulesMap(argv) {
 }
 
 async function ensureBranchesProtection(argv) {
+  if (!argv.protection) return;
+
   const octokit = github.getOctokit(argv.token);
   const ruleIds = await getBranchProtectionRulesMap(argv);
   for (const pattern in ruleIds) {
@@ -299,6 +302,8 @@ async function ensureBranchesProtection(argv) {
 }
 
 async function suspendBranchesProtection(argv, branchPatterns = ProtectedBranchPatterns) {
+  if (!argv.protection) return;
+
   const octokit = github.getOctokit(argv.token);
   const ruleIds = await getBranchProtectionRulesMap(argv);
   for (const pattern of branchPatterns) {
