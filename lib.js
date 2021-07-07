@@ -146,7 +146,7 @@ async function getBranchProtectionRulesMap(argv) {
   }
 
   for (const pattern of ProtectedBranchPatterns.filter(p => !(p in ruleIds))) {
-    console.log(`> creating branch protection rule for pattern ${pattern}`);
+    console.log(`> creating protection rule for branch name pattern ${pattern}`);
     const { createBranchProtectionRule } = await octokit.graphql(`
       mutation {
         createBranchProtectionRule(input: {
@@ -162,7 +162,7 @@ async function getBranchProtectionRulesMap(argv) {
   return ruleIds;
 }
 
-async function enableBranchesProtection(argv) {
+async function ensureBranchesProtection(argv) {
   const octokit = github.getOctokit(argv.token);
   const ruleIds = await getBranchProtectionRulesMap(argv);
   for (const pattern in ruleIds) {
@@ -186,7 +186,7 @@ async function enableBranchesProtection(argv) {
         }) { clientMutationId }
       }
     `;
-    console.log(`> enable branch protection for pattern ${pattern} with id ${id}`);
+    console.log(`> ensure protection for branch name pattern ${pattern}`);
     if (bumpOpts.dry) {
       console.log(mutation);
       continue;
@@ -195,7 +195,7 @@ async function enableBranchesProtection(argv) {
   }
 }
 
-async function disableBranchesProtection(argv, branchPatterns = ProtectedBranchPatterns) {
+async function suspendBranchesProtection(argv, branchPatterns = ProtectedBranchPatterns) {
   const octokit = github.getOctokit(argv.token);
   const ruleIds = await getBranchProtectionRulesMap(argv);
   for (const pattern of branchPatterns) {
@@ -218,7 +218,7 @@ async function disableBranchesProtection(argv, branchPatterns = ProtectedBranchP
         }) { clientMutationId }
       }
     `;
-    console.log(`> disable branch protection for pattern ${pattern} with id ${id}`);
+    console.log(`> suspend protection for branch name pattern ${pattern}`);
     if (bumpOpts.dry) {
       console.log(mutation);
       continue;
@@ -235,7 +235,7 @@ async function mergeCall(argv, keyword) {
     "prerelease": ["dev"]
   };
   const branchPatterns = pushTargets[keyword].map(p => `${p}/*/*`);
-  await disableBranchesProtection(argv, branchPatterns).catch(console.error);
+  await suspendBranchesProtection(argv, branchPatterns).catch(console.error);
 
   const octokit = github.getOctokit(argv.token);
   const headVersion = getCurrentVersion(argv.cwd);
@@ -337,7 +337,7 @@ async function mergeCall(argv, keyword) {
     await gitCall("switch", argv.baseRef);
   }
 
-  await enableBranchesProtection(argv).catch(console.error);
+  await ensureBranchesProtection(argv).catch(console.error);
 }
 
 exports.getChannel = getChannel;
@@ -346,9 +346,9 @@ exports.exec = exec;
 
 exports.gitCall = gitCall;
 
-exports.enableBranchesProtection = enableBranchesProtection;
+exports.ensureBranchesProtection = ensureBranchesProtection;
 
-exports.disableBranchesProtection = disableBranchesProtection;
+exports.suspendBranchesProtection = suspendBranchesProtection;
 
 exports.setOpts = function (argv) {
   bumpOpts.dry = argv.dry;
