@@ -109,8 +109,11 @@ const git = __nccwpck_require__(5138);
 const semver = __nccwpck_require__(1383);
 const { spawnSync } = __nccwpck_require__(3129);
 
+const ProtectedBranchPatterns = ["main", "release/*/*", "alpha/*/*", "dev/*/*"];
+
 const bumpOpts = { dry: false };
 const spawnOpts = { shell: true, stdio: "pipe", windowsHide: true };
+
 
 function hasLerna(cwd) {
   return fs.existsSync(path.join(cwd, "lerna.json"));
@@ -222,7 +225,121 @@ async function publishCall(argv) {
   }
 }
 
+async function getBranchProtectionRulesMap(argv) {
+  const ruleIds = {};
+  const octokit = github.getOctokit(argv.token);
+
+  const { repository } = await octokit.graphql(`query{repository(name:"${argv.repo}",owner:"${argv.owner}"){id}}`);
+
+  const rulesQuery = await octokit.graphql(`
+        query {
+          repository(name: "${argv.repo}", owner: "${argv.owner}") {
+            branchProtectionRules(first:100) {
+              nodes {
+                id
+                creator { login }
+                pattern
+              }
+            }
+          }
+        }`);
+
+  for (const rule of rulesQuery.repository.branchProtectionRules.nodes) {
+    ruleIds[rule.pattern] = rule.id;
+  }
+
+  for (const pattern of ProtectedBranchPatterns.filter(p => !(p in ruleIds))) {
+    console.log(`> creating protection rule for branch name pattern ${pattern}`);
+    const { createBranchProtectionRule } = await octokit.graphql(`
+      mutation {
+        createBranchProtectionRule(input: {
+          repositoryId: "${repository.id}"
+          pattern: "${pattern}"
+        }) {
+          branchProtectionRule { id }
+        }
+      }
+    `);
+    ruleIds[pattern] = createBranchProtectionRule.branchProtectionRule.id;
+  }
+  return ruleIds;
+}
+
+async function ensureBranchesProtection(argv) {
+  const octokit = github.getOctokit(argv.token);
+  const ruleIds = await getBranchProtectionRulesMap(argv);
+  for (const pattern in ruleIds) {
+    const id = ruleIds[pattern];
+    const restrictsPushes = pattern.split('/')[0] != "dev";
+    const mutation = `
+      mutation {
+        updateBranchProtectionRule(input: {
+          branchProtectionRuleId: "${id}"
+          requiresApprovingReviews: ${restrictsPushes},
+          requiredApprovingReviewCount: ${restrictsPushes ? 1 : 0},
+          dismissesStaleReviews: true,
+          restrictsReviewDismissals: true,
+          requiresStatusChecks: true,
+          requiresStrictStatusChecks: true,
+          requiresConversationResolution: true,
+          isAdminEnforced: true,
+          restrictsPushes: ${restrictsPushes},
+          allowsForcePushes: false,
+          allowsDeletions: false
+        }) { clientMutationId }
+      }
+    `;
+    console.log(`> ensure protection for branch name pattern ${pattern}`);
+    if (bumpOpts.dry) {
+      console.log(mutation);
+      continue;
+    }
+    await octokit.graphql(mutation);
+  }
+}
+
+async function suspendBranchesProtection(argv, branchPatterns = ProtectedBranchPatterns) {
+  const octokit = github.getOctokit(argv.token);
+  const ruleIds = await getBranchProtectionRulesMap(argv);
+  for (const pattern of branchPatterns) {
+    const id = ruleIds[pattern];
+    const mutation = `
+      mutation {
+        updateBranchProtectionRule(input: {
+          branchProtectionRuleId: "${id}"
+          requiresApprovingReviews: false,
+          requiredApprovingReviewCount: 0,
+          dismissesStaleReviews: false,
+          restrictsReviewDismissals: false,
+          requiresStatusChecks: false,
+          requiresStrictStatusChecks: false,
+          requiresConversationResolution: false,
+          isAdminEnforced: true,
+          restrictsPushes: false,
+          allowsForcePushes: true,
+          allowsDeletions: false
+        }) { clientMutationId }
+      }
+    `;
+    console.log(`> suspend protection for branch name pattern ${pattern}`);
+    if (bumpOpts.dry) {
+      console.log(mutation);
+      continue;
+    }
+    await octokit.graphql(mutation);
+  }
+}
+
 async function mergeCall(argv, keyword) {
+  const pushTargets = {
+    "premajor": ["release", "alpha", "dev"],
+    "preminor": ["release", "alpha", "dev"],
+    "patch": ["alpha", "dev"],
+    "prerelease": ["dev"]
+  };
+  const branchPatterns = pushTargets[keyword].map(p => `${p}/*/*`);
+  await suspendBranchesProtection(argv, branchPatterns).catch(console.error);
+
   const octokit = github.getOctokit(argv.token);
   const headVersion = getCurrentVersion(argv.cwd);
 
@@ -322,6 +439,8 @@ async function mergeCall(argv, keyword) {
     await gitCall("push", "origin", `HEAD:${devChannel}`);
     await gitCall("switch", argv.baseRef);
   }
+
+  await ensureBranchesProtection(argv).catch(console.error);
 }
 
 exports.getChannel = getChannel;
@@ -329,6 +448,10 @@ exports.getChannel = getChannel;
 exports.exec = exec;
 
 exports.gitCall = gitCall;
+
+exports.ensureBranchesProtection = ensureBranchesProtection;
+
+exports.suspendBranchesProtection = suspendBranchesProtection;
 
 exports.setOpts = function (argv) {
   bumpOpts.dry = argv.dry;
