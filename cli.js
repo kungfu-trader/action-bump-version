@@ -22,7 +22,7 @@ exports.argv = require("yargs/yargs")(process.argv.slice(2))
         lib.setOpts(argv);
         lib.tryBump(argv);
     })
-    .command("publish <keyword>", "publish", (yargs) => {
+    .command("merge <keyword>", "merge", (yargs) => {
         yargs.positional("keyword", {
             description: "Increment version(s) by semver keyword",
             type: "string",
