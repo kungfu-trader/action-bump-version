@@ -1,6 +1,8 @@
 # 功夫版本控制 Bump Version V3
 
-功夫项目的版本控制流程有以下几个核心要素：
+## 目标 - Requirements
+
+功夫项目的版本控制流程有以下几个核心目标：
 
 - 版本发布应该是一种不需要执行代码或是脚本命令的人工操作，并且不能太繁琐。
 
@@ -16,11 +18,13 @@
 
 鉴于一般开发者普遍对 git、npm、lerna 乃至 GitHub 等相关工具不够熟悉，不能期望在上述任何一个环节中需要开发者进行相对高阶的工具操作。例如一旦在某些节点上 git 分支合并失败并导致 git 历史线混乱时，一般开发者缺乏解决处理这种问题的能力，将会给版本控制流程带来进一步不可知的问题。
 
-## 规则
+## 规则 - Rules
 
 出于以上种种考虑，在功夫项目中，我们使用以下方法进行版本控制。
 
 首先我们基于 GitHub 的 [Pull Request](https://docs.github.com/en/github/collaborating-with-pull-requests) 特性进行版本发布操作，这可以在 Web 页面上完成从发布到审核的所有操作。同时利用关联到相关 GitHub 事件的 [Action](https://docs.github.com/en/actions) 进行自动版本信息维护操作，以避免人工操作带来的手误风险。
+
+### 分支规则 - Branches Pattern
 
 由于 GitHub 事件可以在任意分支上触发，为精确控制行为，我们需要做一些限定。具体来说，我们在以下几个分支进行版本管理工作：
 
@@ -48,7 +52,7 @@
 
 版本信息存储在根目录下的 [package.json](https://docs.npmjs.com/cli/v7/configuring-npm/package-json)（单一项目）或 [lerna.json](https://github.com/lerna/lerna)（复合项目 Workspace）中。使用此 action 必须提供这两种文件其中之一。具体格式请参阅相关文档。
 
-## 分支保护
+### 分支保护 - Branches Protection
 
 action-bump-action@v3 以上版本默认对以下分支设置[保护规则](https://docs.github.com/en/github/administering-a-repository/defining-the-mergeability-of-pull-requests/managing-a-branch-protection-rule)：
 
@@ -91,11 +95,13 @@ allowsDeletions = false
 
 注意执行规则设置需要 input 中的 token 是具备相关管理权限的 [Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token)。如果不希望设置保护规则，可将 input 中的 no-protection 设置为 true。
 
-## 用法 - Usage
+### 自动检查 - Status Checks
 
-### 参数
+当启用分支保护规则时，会在除 dev 外的其他各分支频道上添加一个名为 verify 的 [Status Check](https://docs.github.com/en/rest/reference/repos#statuses)，仅当其成功执行时才运行合并 Pull Request。此 Status Check 的具体行为可由用户在 workflow yml 中自行定义，建议使用本 action 且将 Input 参数中的 "aciton" 设定为 "verify" 作为关键步骤，详见下述参数说明。
 
-输入：
+## 用法 - Usage in GitHub Workflow YML
+
+### 输入参数 - Inputs
 
 - token - 用于访问 GitHub 资源的 token，建议使用 [${{ secrets.GITHUB_TOKEN }}](https://docs.github.com/en/actions/reference/authentication-in-a-workflow)。action-bump-version@v3 以上的版本支持对 main/release/alpha/dev 版本频道上的分支设置[保护规则](https://docs.github.com/en/github/administering-a-repository/defining-the-mergeability-of-pull-requests/managing-a-branch-protection-rule)，如要使用此特性，需要将 token 设置为具备相关权限的 [Personal Access Token](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token)。
 
@@ -104,12 +110,13 @@ allowsDeletions = false
   - auto - 根据 pull request 或者 workflow 事件自动执行。
   - prebuild - 如果需要在升级版本过程中执行其他操作，则可使用 prebuild/postbuild 组合，其中 prebuild 仅在 alpha->release 过程中进行版本升级，这样使得该操作完成后，action runner 所在的工作路径中对应的当前版本总是对应最新正在发布的 release/prerelease 版本。
   - postbuild - 而 postbuild 则执行所有剩余操作，包括打标签，推送回 origin，准备新的频道分支等。该操作完成后，action runner 所在的工作路径中对应的当前版本会对应最新的未发布的 prerelease 版本。
+  - verify - 检查当前 Pull Request 对应的 head ref 和 base ref 是否符合版本要求，例如 dev/v1/v1.1 -> alpha/v2/2.1，alpha/v2/2.1 -> release/v2/v2.0 等都会报错。
 
 - no-publish - 默认为 false。此 action 默认行为会发布到 npm repo（对应 npm publish），如果不希望执行 npm publish，则需将此参数设定为 true。
 
 - no-protection - 默认为 false。此 action 默认对 main/release/alpha/dev 等分支设置[保护规则](https://docs.github.com/en/github/administering-a-repository/defining-the-mergeability-of-pull-requests/managing-a-branch-protection-rule)，如果不希望设置保护，则需将此参数设定为 true。
 
-输出：
+### 输出参数 - Outputs
 
 - keyword - 本次执行中使用的 semver keyword：premajor/preminor/patch/prerelease 其中之一。
 
@@ -119,7 +126,7 @@ allowsDeletions = false
 
 - postbuild-version - 本次执行结束之后当前 git ref 上 HEAD 代码所对应的版本信息，例如当 keyword 为 patch，prebuild-version 为 1.0.0-alpha.1，verison 为 1.0.0， postbuild-version 为 1.0.1.alpha-0。
 
-## 示例 - Example
+## 示例 - Examples
 
 ### 自动升级版本 - Auto bump on pull requests
 
@@ -151,7 +158,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-#### 自定义编译流程 - Custom
+### 自定义编译流程 - Custom
 
 ```yaml
 on:
@@ -192,7 +199,7 @@ jobs:
           action: postbuild
 ```
 
-#### 手动升级主版本 - Manually bump major version
+### 手动升级主版本 - Manually bump major version
 
 ```yaml
 on:
