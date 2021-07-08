@@ -3,8 +3,8 @@ on:
   pull_request:
     types: [opened]
     branches:
-      - alpha/v*/v*
-      - release/v*/v*
+      - alpha/*/*
+      - release/*/*
       - main
 
 jobs:
