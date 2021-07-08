@@ -21,6 +21,6 @@ jobs:
           scope: '@kungfu-trader'
 
       - name: Bump Version
-        uses: kungfu-trader/action-bump-version@v2
+        uses: kungfu-trader/action-bump-version@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
