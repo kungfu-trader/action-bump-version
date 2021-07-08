@@ -274,6 +274,7 @@ async function ensureBranchesProtection(argv) {
   for (const pattern in ruleIds) {
     const id = ruleIds[pattern];
     const restrictsPushes = pattern.split('/')[0] != "dev";
+    const statusCheckContexts = `["verify"]`;
     const mutation = `
       mutation {
         updateBranchProtectionRule(input: {
@@ -283,7 +284,7 @@ async function ensureBranchesProtection(argv) {
           dismissesStaleReviews: true,
           restrictsReviewDismissals: true,
           requiresStatusChecks: true,
-          requiredStatusCheckContexts: ["verify"],
+          requiredStatusCheckContexts: ${restrictsPushes ? statusCheckContexts : "[]"},
           requiresStrictStatusChecks: true,
           requiresConversationResolution: true,
           isAdminEnforced: true,
