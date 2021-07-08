@@ -23,4 +23,4 @@ jobs:
       - name: Bump Version
         uses: kungfu-trader/action-bump-version@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.KUNGFU_GITHUB_TOKEN }}
