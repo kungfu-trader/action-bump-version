@@ -179,7 +179,7 @@ async function ensureBranchesProtection(argv) {
           dismissesStaleReviews: true,
           restrictsReviewDismissals: true,
           requiresStatusChecks: true,
-          requiredStatusCheckContexts: ["check", "verify"],
+          requiredStatusCheckContexts: ["verify"],
           requiresStrictStatusChecks: true,
           requiresConversationResolution: true,
           isAdminEnforced: true,
