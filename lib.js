@@ -116,7 +116,7 @@ async function bumpCall(argv, keyword, message) {
 
 async function publishCall(argv) {
   if (hasLerna(argv.cwd)) {
-    exec("lerna", ["publish", "from-package", "--preid", "alpha"]);
+    exec("lerna", ["publish", "from-package", "--preid", "alpha", "--yes"]);
   } else {
     exec("npm", ["publish"]);
   }
