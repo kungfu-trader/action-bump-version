@@ -49,7 +49,7 @@ const teardown = exports.teardown = async function (argv) {
             "prerelease": `Prerelease ${version}`
         };
         const mutation = `mutation {
-                updatePullRequest(input: { pullRequestId: "${argv.pullRequest.id}" title: "${titles[keyword]}" }) {
+                updatePullRequest(input: { pullRequestId: "${argv.pullRequest.node_id}" title: "${titles[keyword]}" }) {
                     pullRequest { id }
                 }
             }`;
