@@ -15,7 +15,7 @@ const setup = exports.setup = async function (argv) {
     const context = github.context;
     const octokit = github.getOctokit(argv.token);
     if (context.eventName == "pull_request") {
-        const pullRequestNumber = context.issue ? context.issue.number : context.payload.pull_request.number;
+        const pullRequestNumber = context.issue.number ? context.issue.number : context.payload.pull_request.number;
         const { data: pullRequest } = await octokit.rest.pulls.get({
             owner: argv.owner,
             repo: argv.repo,
@@ -38,7 +38,7 @@ const teardown = exports.teardown = async function (argv) {
     const context = github.context;
     const octokit = github.getOctokit(argv.token);
     if (context.eventName == "pull_request") {
-        const version = lib.getCurrentVersion();
+        const version = lib.currentVersion();
         const keyword = lib.getBumpKeyword(argv);
         const titles = {
             "premajor": `Prepare v${semver.inc(version, 'major')}`,
