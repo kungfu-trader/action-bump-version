@@ -40,18 +40,18 @@ const teardown = exports.teardown = async function (argv) {
     const context = github.context;
     const octokit = github.getOctokit(argv.token);
     if (context.eventName == "pull_request") {
-        const version = lib.currentVersion();
         const keyword = lib.getBumpKeyword(argv);
-        const titles = {
-            "premajor": `Prepare v${semver.inc(version, 'major')}`,
-            "preminor": `Prepare v${semver.inc(version, 'minor')}`,
-            "patch": `Release v${semver.inc(version, 'patch')}`,
-            "prerelease": `Prerelease ${version}`
+        const title = {
+            "premajor": (v) => `Prepare v${semver.inc(v, 'major')}`,
+            "preminor": (v) => `Prepare v${semver.inc(v, 'minor')}`,
+            "patch": (v) => `Release v${semver.inc(v, 'patch')}`,
+            "prerelease": (v) => `Prerelease v${v}`
         };
         const mutation = `mutation {
-                updatePullRequest(input: { pullRequestId: "${argv.pullRequest.node_id}" title: "${titles[keyword]}" }) {
-                    pullRequest { id }
-                }
+                updatePullRequest(input: {
+                    pullRequestId: "${argv.pullRequest.node_id}"
+                    title: "${title[keyword](lib.currentVersion())}"
+                }) { pullRequest { id } }
             }`;
         await octokit.graphql(mutation);
     }
