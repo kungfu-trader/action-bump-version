@@ -18,6 +18,7 @@ const setup = exports.setup = async function (argv) {
         if (argv.action != "verify" && !pullRequest.merged) {
             throw new Error(`Pull request #${pullRequest.number} [${pullRequest.html_url}]  must be merged`);
         }
+        argv.pullRequest = pullRequest;
     }
     if (context.eventName == "workflow_dispatch") {
         if (lib.getChannel(argv.headRef) != "main" || lib.getChannel(argv.baseRef) != "main") {
@@ -41,7 +42,7 @@ const teardown = exports.teardown = async function (argv) {
             "prerelease": `Prerelease ${version}`
         };
         const mutation = `mutation {
-                updatePullRequest(input: { pullRequestId: "${pullRequest.id}" title: "${titles[keyword]}" }) {
+                updatePullRequest(input: { pullRequestId: "${argv.pullRequest.id}" title: "${titles[keyword]}" }) {
                     pullRequest { id }
                 }
             }`;
