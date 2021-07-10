@@ -1,6 +1,7 @@
 const lib = exports.lib = require("./lib.js");
 const fs = require("fs");
 const path = require("path");
+const semver = require('semver');
 const core = require('@actions/core');
 const github = require("@actions/github");
 

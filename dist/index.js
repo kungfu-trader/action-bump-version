@@ -8,6 +8,7 @@ module.exports =
 const lib = exports.lib = __nccwpck_require__(2909);
 const fs = __nccwpck_require__(5747);
 const path = __nccwpck_require__(5622);
+const semver = __nccwpck_require__(1383);
 const core = __nccwpck_require__(2186);
 const github = __nccwpck_require__(5438);
 
