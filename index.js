@@ -1,6 +1,7 @@
 const lib = exports.lib = require("./lib.js");
 const fs = require("fs");
 const path = require("path");
+const semver = require('semver');
 const core = require('@actions/core');
 const github = require("@actions/github");
 
@@ -8,14 +9,16 @@ const setup = exports.setup = async function (argv) {
     const context = github.context;
     const octokit = github.getOctokit(argv.token);
     if (context.eventName == "pull_request") {
+        const pullRequestNumber = context.issue.number ? context.issue.number : context.payload.pull_request.number;
         const { data: pullRequest } = await octokit.rest.pulls.get({
             owner: argv.owner,
             repo: argv.repo,
-            pull_number: context.payload.pull_request.number
+            pull_number: pullRequestNumber
         });
         if (argv.action != "verify" && !pullRequest.merged) {
             throw new Error(`Pull request #${pullRequest.number} [${pullRequest.html_url}]  must be merged`);
         }
+        argv.pullRequest = pullRequest;
     }
     if (context.eventName == "workflow_dispatch") {
         if (lib.getChannel(argv.headRef) != "main" || lib.getChannel(argv.baseRef) != "main") {
@@ -24,6 +27,27 @@ const setup = exports.setup = async function (argv) {
     }
     await lib.gitCall("config", "--global", "user.name", argv.actor);
     await lib.gitCall("config", "--global", "user.email", `${argv.actor}@users.noreply.github.com`);
+};
+
+const teardown = exports.teardown = async function (argv) {
+    const context = github.context;
+    const octokit = github.getOctokit(argv.token);
+    if (context.eventName == "pull_request") {
+        const keyword = lib.getBumpKeyword(argv);
+        const title = {
+            "premajor": (v) => `Prepare v${semver.inc(v, 'major')}`,
+            "preminor": (v) => `Prepare v${semver.inc(v, 'minor')}`,
+            "patch": (v) => `Release v${semver.inc(v, 'patch')}`,
+            "prerelease": (v) => `Prerelease v${v}`
+        };
+        const mutation = `mutation {
+                updatePullRequest(input: {
+                    pullRequestId: "${argv.pullRequest.node_id}"
+                    title: "${title[keyword](lib.currentVersion())}"
+                }) { pullRequest { id } }
+            }`;
+        await octokit.graphql(mutation);
+    }
 };
 
 const prebuild = async (argv) => {
@@ -52,7 +76,7 @@ const actions = exports.actions = {
     },
     "prebuild": prebuild,
     "postbuild": postbuild,
-    "verify": async (argv) => lib.verify(argv)
+    "verify": lib.verify
 };
 
 const main = async function () {
@@ -77,6 +101,7 @@ const main = async function () {
     core.setOutput("keyword", argv.keyword);
     await setup(argv);
     await actions[argv.action](argv);
+    await teardown(argv);
 };
 
 if (process.env.GITHUB_ACTION) {
