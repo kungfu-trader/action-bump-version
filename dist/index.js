@@ -15,10 +15,11 @@ const setup = exports.setup = async function (argv) {
     const context = github.context;
     const octokit = github.getOctokit(argv.token);
     if (context.eventName == "pull_request") {
+        const pullRequestNumber = context.issue ? context.issue.number : context.payload.pull_request.number;
         const { data: pullRequest } = await octokit.rest.pulls.get({
             owner: argv.owner,
             repo: argv.repo,
-            pull_number: context.payload.pull_request.number
+            pull_number: pullRequestNumber
         });
         if (argv.action != "verify" && !pullRequest.merged) {
             throw new Error(`Pull request #${pullRequest.number} [${pullRequest.html_url}]  must be merged`);
@@ -31,6 +32,27 @@ const setup = exports.setup = async function (argv) {
     }
     await lib.gitCall("config", "--global", "user.name", argv.actor);
     await lib.gitCall("config", "--global", "user.email", `${argv.actor}@users.noreply.github.com`);
+};
+
+const teardown = exports.teardown = async function (argv) {
+    const context = github.context;
+    const octokit = github.getOctokit(argv.token);
+    if (context.eventName == "pull_request") {
+        const version = lib.getCurrentVersion();
+        const keyword = lib.getBumpKeyword(argv);
+        const titles = {
+            "premajor": `Prepare v${semver.inc(version, 'major')}`,
+            "preminor": `Prepare v${semver.inc(version, 'minor')}`,
+            "patch": `Release v${semver.inc(version, 'patch')}`,
+            "prerelease": `Prerelease ${version}`
+        };
+        const mutation = `mutation {
+                updatePullRequest(input: { pullRequestId: "${pullRequest.id}" title: "${titles[keyword]}" }) {
+                    pullRequest { id }
+                }
+            }`;
+        await octokit.graphql(mutation);
+    }
 };
 
 const prebuild = async (argv) => {
@@ -59,7 +81,7 @@ const actions = exports.actions = {
     },
     "prebuild": prebuild,
     "postbuild": postbuild,
-    "verify": async (argv) => lib.verify(argv)
+    "verify": lib.verify
 };
 
 const main = async function () {
@@ -84,6 +106,7 @@ const main = async function () {
     core.setOutput("keyword", argv.keyword);
     await setup(argv);
     await actions[argv.action](argv);
+    await teardown(argv);
 };
 
 if (process.env.GITHUB_ACTION) {
@@ -482,7 +505,7 @@ exports.tryPublish = async (argv) => {
 
 exports.tryMerge = (argv) => mergeCall(argv, getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef, true));
 
-exports.verify = (argv) => {
+exports.verify = async (argv) => {
   const keyword = getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef);
   if (!keyword) {
     throw new Error(`No rule to bump for head/base refs: ${argv.headRef} -> ${argv.baseRef}`);

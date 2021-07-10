@@ -37,7 +37,7 @@ exports.argv = require("yargs/yargs")(process.argv.slice(2))
     .command("verify", "verify", (yargs) => {
     }, (argv) => {
         lib.setOpts(argv);
-        lib.verify(argv);
+        lib.verify(argv).catch(console.error);
     })
     .command("ensure-protect", "ensure branches protection", (yargs) => {
     }, (argv) => {
