@@ -7,9 +7,9 @@ const github = require("@actions/github");
 
 const setup = exports.setup = async function (argv) {
     const context = github.context;
-    const octokit = github.getOctokit(argv.token);
     if (context.eventName == "pull_request") {
         const pullRequestNumber = context.issue.number ? context.issue.number : context.payload.pull_request.number;
+        const octokit = github.getOctokit(argv.token);
         const { data: pullRequest } = await octokit.rest.pulls.get({
             owner: argv.owner,
             repo: argv.repo,
@@ -30,10 +30,9 @@ const setup = exports.setup = async function (argv) {
 };
 
 const teardown = exports.teardown = async function (argv) {
-    const context = github.context;
-    const octokit = github.getOctokit(argv.token);
-    if (context.eventName == "pull_request") {
+    if (github.context.eventName == "pull_request" && argv.action == "verify") {
         const keyword = lib.getBumpKeyword(argv);
+        const octokit = github.getOctokit(argv.token);
         const title = {
             "premajor": (v) => `Prepare v${semver.inc(v, 'major')}`,
             "preminor": (v) => `Prepare v${semver.inc(v, 'minor')}`,
