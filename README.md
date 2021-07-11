@@ -128,6 +128,31 @@ allowsDeletions = false
 
 ## 示例 - Examples
 
+### 自动检查 - Status Check
+
+```yaml
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - alpha/*/*
+      - release/*/*
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Verify Version
+        uses: kungfu-trader/action-bump-version@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          action: "verify"
+```
+
 ### 自动升级版本 - Auto bump on pull requests
 
 ```yaml
@@ -153,7 +178,7 @@ jobs:
           scope: '@kungfu-trader'
 
       - name: Bump Version
-        uses: kungfu-trader/action-bump-version@v2
+        uses: kungfu-trader/action-bump-version@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -183,7 +208,7 @@ jobs:
           scope: '@kungfu-trader'
 
       - name: Bump Version
-        uses: kungfu-trader/action-bump-version@v2
+        uses: kungfu-trader/action-bump-version@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           action: prebuild
@@ -193,7 +218,7 @@ jobs:
           yarn build
 
       - name: Publish
-        uses: kungfu-trader/action-bump-version@v2
+        uses: kungfu-trader/action-bump-version@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           action: postbuild
@@ -219,7 +244,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Bump Version
-        uses: kungfu-trader/action-bump-version@v2
+        uses: kungfu-trader/action-bump-version@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 ```
