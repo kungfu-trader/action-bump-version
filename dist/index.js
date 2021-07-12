@@ -83,7 +83,6 @@ const actions = exports.actions = {
     },
     "prebuild": prebuild,
     "postbuild": postbuild,
-    "publish": lib.tryPublish,
     "verify": lib.verify
 };
 
