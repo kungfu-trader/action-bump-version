@@ -34,6 +34,7 @@ const setup = exports.setup = async function (argv) {
     }
     await lib.gitCall("config", "--global", "user.name", argv.actor);
     await lib.gitCall("config", "--global", "user.email", `${argv.actor}@users.noreply.github.com`);
+    lib.ensureLerna(argv);
 };
 
 const teardown = exports.teardown = async function (argv) {
@@ -144,6 +145,21 @@ function hasLerna(cwd) {
   return fs.existsSync(path.join(cwd, "lerna.json"));
 }
 
+function makeNpmrcForLerna(argv) {
+  // https://github.com/lerna/lerna/issues/2404
+  // Note that the only .npmrc file respected by Lerna is the project root. (lerna@4.0.0)
+  const lineRegistry = `@${argv.owner}:registry=https://npm.pkg.github.com/`;
+  const lineAuthToken = "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}";
+  const lineAwaysAuth = "always-auth=false";
+  const npmrcContent = `${lineRegistry}${os.EOL}${lineAuthToken}${os.EOL}${lineAwaysAuth}${os.EOL}`;
+  console.log("> write .npmrc");
+  if (bumpOpts.dry) {
+    console.log(npmrcContent);
+    return;
+  }
+  fs.writeFileSync(".npmrc", npmrcContent);
+}
+
 function getCurrentVersion(cwd) {
   const configPath = path.join(cwd, hasLerna(cwd) ? "lerna.json" : "package.json");
   const config = JSON.parse(fs.readFileSync(configPath));
@@ -206,15 +222,15 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
   return keywords[key];
 }
 
-function exec(cmd, args = []) {
+function exec(cmd, args = [], opts = spawnOpts) {
   console.log("$", cmd, ...args);
   if (bumpOpts.dry) {
     return;
   }
-  const result = spawnSync(cmd, args, spawnOpts);
+  const result = spawnSync(cmd, args, opts);
   const output = result.output.filter(e => e && e.length > 0).toString();
   console.log(output);
-  if (result.status != 0) {
+  if (result.status !== 0) {
     throw new Error(`Failed with status ${result.status}`);
   }
 }
@@ -235,7 +251,6 @@ async function bumpCall(argv, keyword, message) {
   const messageOpt = keyword == "patch" ? [] : nonReleaseMessageOpt;
 
   if (hasLerna(argv.cwd)) {
-    exec("npm", ["install", "-g", "lerna@4.0.0"]);
     exec("lerna", ["version", `${keyword}`, "--yes", "--no-push", ...messageOpt]);
   } else {
     exec("yarn", ["version", `--${keyword}`, "--preid", "alpha", ...messageOpt]);
@@ -244,7 +259,16 @@ async function bumpCall(argv, keyword, message) {
 
 async function publishCall(argv) {
   if (hasLerna(argv.cwd)) {
-    exec("lerna", ["publish", "from-package", "--preid", "alpha", "--yes"]);
+    // https://github.com/lerna/lerna/issues/2404
+    // Until lerna solves this issue we have to use yarn workspaces and npm publish
+    const result = spawnSync("yarn", ["-s", "workspaces", "info"], spawnOpts);
+    const output = result.output.filter(e => e && e.length > 0).toString();
+    const workspaces = JSON.parse(output);
+    for (const key in workspaces) {
+      const workspace = workspaces[key];
+      const execOpts = { cwd: path.join(argv.cwd, workspace.location), ...spawnOpts };
+      exec("npm", ["publish"], execOpts);
+    }
   } else {
     exec("npm", ["publish"]);
   }
@@ -491,6 +515,15 @@ exports.setOpts = function (argv) {
 exports.currentVersion = () => getCurrentVersion(process.cwd());
 
 exports.getBumpKeyword = (argv) => getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef);
+
+exports.ensureLerna = (argv) => {
+  if (hasLerna(argv.cwd)) {
+    const result = spawnSync("lerna", ["--version"], spawnOpts);
+    if (result.status !== 0) {
+      exec("npm", ["install", "-g", "lerna@4.0.0"]);
+    }
+  }
+};
 
 exports.tryBump = (argv) => bumpCall(argv, getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef));
 

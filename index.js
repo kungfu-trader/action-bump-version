@@ -27,6 +27,7 @@ const setup = exports.setup = async function (argv) {
     }
     await lib.gitCall("config", "--global", "user.name", argv.actor);
     await lib.gitCall("config", "--global", "user.email", `${argv.actor}@users.noreply.github.com`);
+    lib.ensureLerna(argv);
 };
 
 const teardown = exports.teardown = async function (argv) {

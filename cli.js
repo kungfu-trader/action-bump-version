@@ -11,6 +11,7 @@ exports.argv = require("yargs/yargs")(process.argv.slice(2))
     .option("owner", { type: "string", default: "kungfu-trader" })
     .option("repo", { type: "string", default: "action-bump-version" })
     .option("protection", { type: boolean, default: true })
+    .option("publish", { type: boolean, default: true })
     .option("dry", { type: boolean })
     .command("bump <keyword>", "bump", (yargs) => {
         yargs.positional("keyword", {
