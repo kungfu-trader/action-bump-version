@@ -15,8 +15,9 @@ const setup = exports.setup = async function (argv) {
             repo: argv.repo,
             pull_number: pullRequestNumber
         });
-        if (argv.action != "verify" && !pullRequest.merged) {
-            throw new Error(`Pull request #${pullRequest.number} [${pullRequest.html_url}]  must be merged`);
+        const merge = argv.action === "auto" || argv.action === "postbuild";
+        if (merge && !pullRequest.merged) {
+            throw new Error(`Pull request [${pullRequest.html_url}] must be merged to perform action ${argv.action}`);
         }
         argv.pullRequest = pullRequest;
     }
