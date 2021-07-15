@@ -12,11 +12,16 @@ const semver = __nccwpck_require__(1383);
 const core = __nccwpck_require__(2186);
 const github = __nccwpck_require__(5438);
 
+function getPullRequestNumber() {
+    const issue = github.context.issue;
+    return issue.number ? issue.number : github.context.payload.pull_request.number;
+}
+
 const setup = exports.setup = async function (argv) {
     const context = github.context;
     if (context.eventName == "pull_request") {
-        const pullRequestNumber = context.issue.number ? context.issue.number : context.payload.pull_request.number;
         const octokit = github.getOctokit(argv.token);
+        const pullRequestNumber = getPullRequestNumber();
         const { data: pullRequest } = await octokit.rest.pulls.get({
             owner: argv.owner,
             repo: argv.repo,
@@ -84,7 +89,19 @@ const actions = exports.actions = {
     },
     "prebuild": prebuild,
     "postbuild": postbuild,
-    "verify": lib.verify
+    "verify": async (argv) => {
+        try {
+            lib.verify(argv);
+        } catch (error) {
+            if (github.context.eventName == "pull_request") {
+                const octokit = github.getOctokit(argv.token);
+                const id = argv.pullRequest.node_id;
+                const body = `Invalid Pull Request from ${argv.headRef} to ${argv.baseRef} for version ${lib.currentVersion()}`;
+                await octokit.graphql(`mutation{addComment(input:{subjectId:"${id}",body:"${body}"}){subject{id}}}`);
+                await octokit.graphql(`mutation {updatePullRequest(input:{pullRequestId:"${id}", state:CLOSED}) {pullRequest{id}}}`);
+            }
+        }
+    }
 };
 
 const main = async function () {
@@ -540,7 +557,7 @@ exports.tryPublish = async (argv) => {
 
 exports.tryMerge = (argv) => mergeCall(argv, getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef, true));
 
-exports.verify = async (argv) => {
+exports.verify = (argv) => {
   const keyword = getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef);
   if (!keyword) {
     throw new Error(`No rule to bump for head/base refs: ${argv.headRef} -> ${argv.baseRef}`);
