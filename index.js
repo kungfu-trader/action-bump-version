@@ -14,11 +14,10 @@ const setup = exports.setup = async function (argv) {
     const context = github.context;
     if (context.eventName == "pull_request") {
         const octokit = github.getOctokit(argv.token);
-        const pullRequestNumber = getPullRequestNumber();
         const { data: pullRequest } = await octokit.rest.pulls.get({
             owner: argv.owner,
             repo: argv.repo,
-            pull_number: pullRequestNumber
+            pull_number: getPullRequestNumber()
         });
         const merge = argv.action === "auto" || argv.action === "postbuild";
         if (merge && !pullRequest.merged) {
@@ -75,6 +74,26 @@ const postbuild = async (argv) => {
     core.setOutput("postbuild-version", `v${lib.currentVersion()}`);
 };
 
+const tryClosePullRequest = async () => {
+    const token = core.getInput('token');
+    const headRef = process.env.GITHUB_HEAD_REF || context.ref;
+    const baseRef = process.env.GITHUB_BASE_REF || context.ref;
+    if (github.context.eventName == "pull_request" && core.getInput('action') === "verify") {
+        const repo = github.context.repo;
+        const octokit = github.getOctokit(token);
+        const pullRequestQuery = await octokit.graphql(`
+            query {
+            repository(name: "${repo.repo}", owner: "${repo.owner}") {
+                pullRequest(number: ${getPullRequestNumber()}) { id }
+            }
+        }`);
+        const pullRequestId = pullRequestQuery.repository.pullRequest.id;
+        const body = `Invalid Pull Request from ${headRef} to ${baseRef} for version ${lib.currentVersion()}`;
+        await octokit.graphql(`mutation{addComment(input:{subjectId:"${pullRequestId}",body:"${body}"}){subject{id}}}`);
+        await octokit.graphql(`mutation {updatePullRequest(input:{pullRequestId:"${pullRequestId}", state:CLOSED}) {pullRequest{id}}}`);
+    }
+};
+
 const actions = exports.actions = {
     "auto": async (argv) => {
         await prebuild(argv);
@@ -82,19 +101,7 @@ const actions = exports.actions = {
     },
     "prebuild": prebuild,
     "postbuild": postbuild,
-    "verify": async (argv) => {
-        try {
-            lib.verify(argv);
-        } catch (error) {
-            if (github.context.eventName == "pull_request") {
-                const octokit = github.getOctokit(argv.token);
-                const id = argv.pullRequest.node_id;
-                const body = `Invalid Pull Request from ${argv.headRef} to ${argv.baseRef} for version ${lib.currentVersion()}`;
-                await octokit.graphql(`mutation{addComment(input:{subjectId:"${id}",body:"${body}"}){subject{id}}}`);
-                await octokit.graphql(`mutation {updatePullRequest(input:{pullRequestId:"${id}", state:CLOSED}) {pullRequest{id}}}`);
-            }
-        }
-    }
+    "verify": lib.verify
 };
 
 const main = async function () {
@@ -129,6 +136,7 @@ if (process.env.GITHUB_ACTION) {
         main().catch((error) => {
             console.error(error);
             core.setFailed(error.message);
+            tryClosePullRequest().catch(console.error);
         });
     }
 }

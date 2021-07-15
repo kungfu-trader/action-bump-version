@@ -410,7 +410,7 @@ exports.tryPublish = async (argv) => {
 
 exports.tryMerge = (argv) => mergeCall(argv, getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef, true));
 
-exports.verify = (argv) => {
+exports.verify = async (argv) => {
   const keyword = getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef);
   if (!keyword) {
     throw new Error(`No rule to bump for head/base refs: ${argv.headRef} -> ${argv.baseRef}`);
