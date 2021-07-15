@@ -403,7 +403,7 @@ exports.tryPublish = async (argv) => {
     process.env.NODE_AUTH_TOKEN = argv.token;
     const keyword = getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef);
     if (keyword == "patch" || keyword == "prerelease") {
-      publishCall(argv);
+      await publishCall(argv);
     }
   }
 };
