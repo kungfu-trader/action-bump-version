@@ -74,7 +74,7 @@ const postbuild = async (argv) => {
     core.setOutput("postbuild-version", `v${lib.currentVersion()}`);
 };
 
-const tryClosePullRequest = async () => {
+const tryClosePullRequest = async (error) => {
     const token = core.getInput('token');
     const headRef = process.env.GITHUB_HEAD_REF || context.ref;
     const baseRef = process.env.GITHUB_BASE_REF || context.ref;
@@ -88,7 +88,7 @@ const tryClosePullRequest = async () => {
             }
         }`);
         const pullRequestId = pullRequestQuery.repository.pullRequest.id;
-        const body = `Invalid Pull Request from ${headRef} to ${baseRef} for version ${lib.currentVersion()}`;
+        const body = `Invalid Pull Request from ${headRef} to ${baseRef} for version ${lib.currentVersion()}: ${error.message}`;
         await octokit.graphql(`mutation{addComment(input:{subjectId:"${pullRequestId}",body:"${body}"}){subject{id}}}`);
         await octokit.graphql(`mutation {updatePullRequest(input:{pullRequestId:"${pullRequestId}", state:CLOSED}) {pullRequest{id}}}`);
     }
@@ -136,7 +136,7 @@ if (process.env.GITHUB_ACTION) {
         main().catch((error) => {
             console.error(error);
             core.setFailed(error.message);
-            tryClosePullRequest().catch(console.error);
+            tryClosePullRequest(error).catch(console.error);
         });
     }
 }
