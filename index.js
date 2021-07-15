@@ -5,18 +5,23 @@ const semver = require('semver');
 const core = require('@actions/core');
 const github = require("@actions/github");
 
+function getPullRequestNumber() {
+    const issue = github.context.issue;
+    return issue.number ? issue.number : github.context.payload.pull_request.number;
+}
+
 const setup = exports.setup = async function (argv) {
     const context = github.context;
     if (context.eventName == "pull_request") {
-        const pullRequestNumber = context.issue.number ? context.issue.number : context.payload.pull_request.number;
         const octokit = github.getOctokit(argv.token);
         const { data: pullRequest } = await octokit.rest.pulls.get({
             owner: argv.owner,
             repo: argv.repo,
-            pull_number: pullRequestNumber
+            pull_number: getPullRequestNumber()
         });
-        if (argv.action != "verify" && !pullRequest.merged) {
-            throw new Error(`Pull request #${pullRequest.number} [${pullRequest.html_url}]  must be merged`);
+        const merge = argv.action === "auto" || argv.action === "postbuild";
+        if (merge && !pullRequest.merged) {
+            throw new Error(`Pull request [${pullRequest.html_url}] must be merged to perform action ${argv.action}`);
         }
         argv.pullRequest = pullRequest;
     }
@@ -69,6 +74,26 @@ const postbuild = async (argv) => {
     core.setOutput("postbuild-version", `v${lib.currentVersion()}`);
 };
 
+const tryClosePullRequest = async (error) => {
+    const token = core.getInput('token');
+    const headRef = process.env.GITHUB_HEAD_REF || context.ref;
+    const baseRef = process.env.GITHUB_BASE_REF || context.ref;
+    if (github.context.eventName == "pull_request" && core.getInput('action') === "verify") {
+        const repo = github.context.repo;
+        const octokit = github.getOctokit(token);
+        const pullRequestQuery = await octokit.graphql(`
+            query {
+            repository(name: "${repo.repo}", owner: "${repo.owner}") {
+                pullRequest(number: ${getPullRequestNumber()}) { id }
+            }
+        }`);
+        const pullRequestId = pullRequestQuery.repository.pullRequest.id;
+        const body = `Invalid Pull Request from ${headRef} to ${baseRef} for version ${lib.currentVersion()}: ${error.message}`;
+        await octokit.graphql(`mutation{addComment(input:{subjectId:"${pullRequestId}",body:"${body}"}){subject{id}}}`);
+        await octokit.graphql(`mutation {updatePullRequest(input:{pullRequestId:"${pullRequestId}", state:CLOSED}) {pullRequest{id}}}`);
+    }
+};
+
 const actions = exports.actions = {
     "auto": async (argv) => {
         await prebuild(argv);
@@ -111,6 +136,7 @@ if (process.env.GITHUB_ACTION) {
         main().catch((error) => {
             console.error(error);
             core.setFailed(error.message);
+            tryClosePullRequest(error).catch(console.error);
         });
     }
 }
