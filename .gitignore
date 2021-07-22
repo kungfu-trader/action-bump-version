@@ -4,7 +4,3 @@
 
 # NPM related
 node_modules/
-dist/build/
-.project
-package-lock.json
-yarn.lock

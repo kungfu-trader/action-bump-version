@@ -1,38 +1,38 @@
-const github = require("@actions/github");
-const fs = require("fs");
-const os = require("os");
-const path = require("path");
+/* eslint-disable no-restricted-globals */
+const github = require('@actions/github');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const git = require('git-client');
 const semver = require('semver');
-const { spawnSync } = require("child_process");
+const { spawnSync } = require('child_process');
 
-const ProtectedBranchPatterns = ["main", "release/*/*", "alpha/*/*", "dev/*/*"];
+const ProtectedBranchPatterns = ['main', 'release/*/*', 'alpha/*/*', 'dev/*/*'];
 
 const bumpOpts = { dry: false };
-const spawnOpts = { shell: true, stdio: "pipe", windowsHide: true };
-
+const spawnOpts = { shell: true, stdio: 'pipe', windowsHide: true };
 
 function hasLerna(cwd) {
-  return fs.existsSync(path.join(cwd, "lerna.json"));
+  return fs.existsSync(path.join(cwd, 'lerna.json'));
 }
 
 function makeNpmrcForLerna(argv) {
   // https://github.com/lerna/lerna/issues/2404
   // Note that the only .npmrc file respected by Lerna is the project root. (lerna@4.0.0)
   const lineRegistry = `@${argv.owner}:registry=https://npm.pkg.github.com/`;
-  const lineAuthToken = "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}";
-  const lineAwaysAuth = "always-auth=false";
+  const lineAuthToken = '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}';
+  const lineAwaysAuth = 'always-auth=false';
   const npmrcContent = `${lineRegistry}${os.EOL}${lineAuthToken}${os.EOL}${lineAwaysAuth}${os.EOL}`;
-  console.log("> write .npmrc");
+  console.log('> write .npmrc');
   if (bumpOpts.dry) {
     console.log(npmrcContent);
     return;
   }
-  fs.writeFileSync(".npmrc", npmrcContent);
+  fs.writeFileSync('.npmrc', npmrcContent);
 }
 
 function getCurrentVersion(cwd) {
-  const configPath = path.join(cwd, hasLerna(cwd) ? "lerna.json" : "package.json");
+  const configPath = path.join(cwd, hasLerna(cwd) ? 'lerna.json' : 'package.json');
   const config = JSON.parse(fs.readFileSync(configPath));
   return semver.parse(config.version);
 }
@@ -53,21 +53,22 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
   const baseChannel = getChannel(baseRef);
   const key = `${headChannel}->${baseChannel}`;
   const keywords = {
-    "dev->alpha": "prerelease",
-    "alpha->release": "patch",
-    "release->main": "preminor",
-    "release->release": "preminor",
-    "main->main": "premajor"
+    'dev->alpha': 'prerelease',
+    'alpha->release': 'patch',
+    'release->main': 'preminor',
+    'release->release': 'preminor',
+    'main->main': 'premajor',
   };
 
-  const lts = baseChannel == "release" && baseRef.split('/').pop() == 'lts';
-  const preminor = (headChannel == "release") && (baseChannel == "main" || lts);
+  const lts = baseChannel === 'release' && baseRef.split('/').pop() === 'lts';
+  const preminor = headChannel === 'release' && (baseChannel === 'main' || lts);
 
-  if (headRef.replace(headChannel, "") !== baseRef.replace(baseChannel, "") && !preminor) {
+  if (headRef.replace(headChannel, '') !== baseRef.replace(baseChannel, '') && !preminor) {
     throw new Error(`Versions not match for head/base refs: ${headRef} -> ${baseRef}`);
   }
 
-  if (headChannel == "main") { // for main -> main
+  if (headChannel === 'main') {
+    // for main -> main
     return keywords[key];
   }
 
@@ -78,15 +79,18 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
     throw new Error(mismatchMsg);
   }
 
-  if (headMatch[2] != version.major || headMatch[3] > looseVersionNumber) {
+  const headMajor = Number(headMatch[2]);
+  const headLoose = Number(headMatch[3]);
+
+  if (headMajor !== version.major || headLoose > looseVersionNumber) {
     throw new Error(mismatchMsg);
   }
 
-  if (headMatch[3] < lastLooseVersionNumber) {
+  if (headLoose < lastLooseVersionNumber) {
     throw new Error(mismatchMsg);
   }
 
-  if (headMatch[3] == lastLooseVersionNumber && !loose) {
+  if (headLoose === lastLooseVersionNumber && !loose) {
     throw new Error(mismatchMsg);
   }
 
@@ -94,12 +98,12 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
 }
 
 function exec(cmd, args = [], opts = spawnOpts) {
-  console.log("$", cmd, ...args);
+  console.log('$', cmd, ...args);
   if (bumpOpts.dry) {
     return;
   }
   const result = spawnSync(cmd, args, opts);
-  const output = result.output.filter(e => e && e.length > 0).toString();
+  const output = result.output.filter((e) => e && e.length > 0).toString();
   console.log(output);
   if (result.status !== 0) {
     throw new Error(`Failed with status ${result.status}`);
@@ -107,7 +111,7 @@ function exec(cmd, args = [], opts = spawnOpts) {
 }
 
 async function gitCall(...args) {
-  console.log("$ git", ...args);
+  console.log('$ git', ...args);
   if (bumpOpts.dry) {
     return;
   }
@@ -118,13 +122,13 @@ async function gitCall(...args) {
 async function bumpCall(argv, keyword, message) {
   const version = getCurrentVersion(argv.cwd);
   semver.inc(version, keyword, 'alpha'); // Get next version to make up message
-  const nonReleaseMessageOpt = ["--message", message ? `"${message}"` : `"Move on to v${version}"`];
-  const messageOpt = keyword == "patch" ? [] : nonReleaseMessageOpt;
+  const nonReleaseMessageOpt = ['--message', message ? `"${message}"` : `"Move on to v${version}"`];
+  const messageOpt = keyword === 'patch' ? [] : nonReleaseMessageOpt;
 
   if (hasLerna(argv.cwd)) {
-    exec("lerna", ["version", `${keyword}`, "--yes", "--no-push", ...messageOpt]);
+    exec('lerna', ['version', `${keyword}`, '--yes', '--no-push', ...messageOpt]);
   } else {
-    exec("yarn", ["version", `--${keyword}`, "--preid", "alpha", ...messageOpt]);
+    exec('yarn', ['version', `--${keyword}`, '--preid', 'alpha', ...messageOpt]);
   }
 }
 
@@ -132,16 +136,16 @@ async function publishCall(argv) {
   if (hasLerna(argv.cwd)) {
     // https://github.com/lerna/lerna/issues/2404
     // Until lerna solves this issue we have to use yarn workspaces and npm publish
-    const result = spawnSync("yarn", ["-s", "workspaces", "info"], spawnOpts);
-    const output = result.output.filter(e => e && e.length > 0).toString();
+    const result = spawnSync('yarn', ['-s', 'workspaces', 'info'], spawnOpts);
+    const output = result.output.filter((e) => e && e.length > 0).toString();
     const workspaces = JSON.parse(output);
     for (const key in workspaces) {
       const workspace = workspaces[key];
       const execOpts = { cwd: path.join(argv.cwd, workspace.location), ...spawnOpts };
-      exec("npm", ["publish"], execOpts);
+      exec('npm', ['publish'], execOpts);
     }
   } else {
-    exec("npm", ["publish"]);
+    exec('npm', ['publish']);
   }
 }
 
@@ -168,7 +172,7 @@ async function getBranchProtectionRulesMap(argv) {
     ruleIds[rule.pattern] = rule.id;
   }
 
-  for (const pattern of ProtectedBranchPatterns.filter(p => !(p in ruleIds))) {
+  for (const pattern of ProtectedBranchPatterns.filter((p) => !(p in ruleIds))) {
     console.log(`> creating protection rule for branch name pattern ${pattern}`);
     const { createBranchProtectionRule } = await octokit.graphql(`
       mutation {
@@ -192,8 +196,8 @@ async function ensureBranchesProtection(argv) {
   const ruleIds = await getBranchProtectionRulesMap(argv);
   for (const pattern in ruleIds) {
     const id = ruleIds[pattern];
-    const restrictsPushes = pattern.split('/')[0] != "dev";
-    const statusCheckContexts = `["verify"]`;
+    const restrictsPushes = pattern.split('/')[0] !== 'dev';
+    const statusCheckContexts = '["verify"]';
     const mutation = `
       mutation {
         updateBranchProtectionRule(input: {
@@ -203,7 +207,7 @@ async function ensureBranchesProtection(argv) {
           dismissesStaleReviews: true,
           restrictsReviewDismissals: true,
           requiresStatusChecks: true,
-          requiredStatusCheckContexts: ${restrictsPushes ? statusCheckContexts : "[]"},
+          requiredStatusCheckContexts: ${restrictsPushes ? statusCheckContexts : '[]'},
           requiresStrictStatusChecks: true,
           requiresConversationResolution: true,
           isAdminEnforced: true,
@@ -258,49 +262,52 @@ async function suspendBranchesProtection(argv, branchPatterns = ProtectedBranchP
 
 async function mergeCall(argv, keyword) {
   const pushTargets = {
-    "premajor": ["release", "alpha", "dev"],
-    "preminor": ["release", "alpha", "dev"],
-    "patch": ["release", "alpha", "dev"],
-    "prerelease": ["dev"]
+    premajor: ['release', 'alpha', 'dev'],
+    preminor: ['release', 'alpha', 'dev'],
+    patch: ['release', 'alpha', 'dev'],
+    prerelease: ['dev'],
   };
-  const branchPatterns = pushTargets[keyword].map(p => `${p}/*/*`);
+  const branchPatterns = pushTargets[keyword].map((p) => `${p}/*/*`);
   await suspendBranchesProtection(argv, branchPatterns).catch(console.error);
 
   const octokit = github.getOctokit(argv.token);
   const headVersion = getCurrentVersion(argv.cwd);
 
-  const pushTag = (tag) => gitCall("push", "-f", "origin", `HEAD:refs/tags/${tag}`);
+  const pushTag = (tag) => gitCall('push', '-f', 'origin', `HEAD:refs/tags/${tag}`);
   const pushAlphaVersionTag = (v) => pushTag(`v${getLooseVersion(v)}-alpha`);
   const pushLooseVersionTag = (v) => pushTag(`v${getLooseVersion(v)}`);
-  const pushMajorVersionTag = (v) => octokit.rest.git.getRef({
-    owner: argv.owner,
-    repo: argv.repo,
-    ref: `tags/v${v.major}.${v.minor + 1}`
-  }).catch(() => pushTag(`v${v.major}`));
+  const pushMajorVersionTag = (v) =>
+    octokit.rest.git
+      .getRef({
+        owner: argv.owner,
+        repo: argv.repo,
+        ref: `tags/v${v.major}.${v.minor + 1}`,
+      })
+      .catch(() => pushTag(`v${v.major}`));
 
   await pushAlphaVersionTag(headVersion);
 
   const pushVersionTags = {
-    "premajor": async (version) => {
-      await gitCall("push", "-f", "origin", `HEAD~1:refs/heads/release/v${argv.version.major}/lts`);
+    premajor: async () => {
+      await gitCall('push', '-f', 'origin', `HEAD~1:refs/heads/release/v${argv.version.major}/lts`);
     },
-    "preminor": async (version) => { },
-    "patch": async (version) => {
+    preminor: async () => {},
+    patch: async (version) => {
       // Track loose version ${major.minor} on release channel
       await pushLooseVersionTag(version);
       // Track major version on release channel
       await pushMajorVersionTag(version);
       // Push release tag
-      await gitCall("push", "-f", "origin", `HEAD:refs/tags/v${version}`);
+      await gitCall('push', '-f', 'origin', `HEAD:refs/tags/v${version}`);
       // Push release commit
-      await gitCall("push", "-f", "origin", `HEAD:refs/heads/${argv.baseRef}`);
+      await gitCall('push', '-f', 'origin', `HEAD:refs/heads/${argv.baseRef}`);
       // Prepare new prerelease version for alpha channel
-      await bumpCall(argv, "prerelease");
+      await bumpCall(argv, 'prerelease');
       await pushAlphaVersionTag(getCurrentVersion(argv.cwd));
     },
-    "prerelease": async (version) => {
-      await gitCall("push", "-f", "origin", `HEAD~1:refs/tags/v${argv.version}`);
-    }
+    prerelease: async () => {
+      await gitCall('push', '-f', 'origin', `HEAD~1:refs/tags/v${argv.version}`);
+    },
   };
 
   await pushVersionTags[keyword](headVersion);
@@ -311,7 +318,7 @@ async function mergeCall(argv, keyword) {
   const { data: alphaVersionRef } = await octokit.rest.git.getRef({
     owner: argv.owner,
     repo: argv.repo,
-    ref: `tags/v${looseVersion}-alpha`
+    ref: `tags/v${looseVersion}-alpha`,
   });
 
   const mergeRemoteChannel = async (channelRef) => {
@@ -319,34 +326,38 @@ async function mergeCall(argv, keyword) {
     if (bumpOpts.dry) {
       return;
     }
-    const { data: branch } = await octokit.rest.git.getRef({
-      owner: argv.owner,
-      repo: argv.repo,
-      ref: `heads/${channelRef}`
-    }).catch(() => octokit.rest.git.createRef({
-      owner: argv.owner,
-      repo: argv.repo,
-      ref: `refs/heads/${channelRef}`,
-      sha: alphaVersionRef.object.sha
-    }));
+    const { data: branch } = await octokit.rest.git
+      .getRef({
+        owner: argv.owner,
+        repo: argv.repo,
+        ref: `heads/${channelRef}`,
+      })
+      .catch(() =>
+        octokit.rest.git.createRef({
+          owner: argv.owner,
+          repo: argv.repo,
+          ref: `refs/heads/${channelRef}`,
+          sha: alphaVersionRef.object.sha,
+        }),
+      );
     const merge = await octokit.rest.repos.merge({
       owner: argv.owner,
       repo: argv.repo,
       base: branch.ref,
       head: alphaVersionRef.object.sha,
-      commit_message: `Update ${channelRef} to work on ${currentVersion}`
+      commit_message: `Update ${channelRef} to work on ${currentVersion}`,
     });
-    if (merge.status != 201 && merge.status != 204) {
+    if (merge.status !== 201 && merge.status !== 204) {
       console.error(merge);
       throw new Error(`Merge failed with status ${merge.status}`);
     }
   };
 
   const mergeTargets = {
-    "premajor": ["release", "alpha", "dev"],
-    "preminor": ["release", "alpha", "dev"],
-    "patch": ["alpha"],
-    "prerelease": ["dev"]
+    premajor: ['release', 'alpha', 'dev'],
+    preminor: ['release', 'alpha', 'dev'],
+    patch: ['alpha'],
+    prerelease: ['dev'],
   };
   const versionRef = `v${currentVersion.major}/v${currentVersion.major}.${currentVersion.minor}`;
 
@@ -355,15 +366,15 @@ async function mergeCall(argv, keyword) {
     await mergeRemoteChannel(`${channel}/${versionRef}`);
   }
 
-  if (keyword == "patch") {
+  if (keyword === 'patch') {
     // Prepare new prerelease version for dev channel
     const devChannel = `dev/${versionRef}`;
-    await gitCall("fetch");
-    await gitCall("switch", "-c", devChannel, `origin/${devChannel}`);
-    await gitCall("tag", "-d", `v${currentVersion}`);
-    await bumpCall(argv, "prepatch", `Update ${devChannel} to work on ${currentVersion}`);
-    await gitCall("push", "origin", `HEAD:${devChannel}`);
-    await gitCall("switch", argv.baseRef);
+    await gitCall('fetch');
+    await gitCall('switch', '-c', devChannel, `origin/${devChannel}`);
+    await gitCall('tag', '-d', `v${currentVersion}`);
+    await bumpCall(argv, 'prepatch', `Update ${devChannel} to work on ${currentVersion}`);
+    await gitCall('push', 'origin', `HEAD:${devChannel}`);
+    await gitCall('switch', argv.baseRef);
   }
 
   await ensureBranchesProtection(argv).catch(console.error);
@@ -389,9 +400,9 @@ exports.getBumpKeyword = (argv) => getBumpKeyword(argv.cwd, argv.headRef, argv.b
 
 exports.ensureLerna = (argv) => {
   if (hasLerna(argv.cwd)) {
-    const result = spawnSync("lerna", ["--version"], spawnOpts);
+    const result = spawnSync('lerna', ['--version'], spawnOpts);
     if (result.status !== 0) {
-      exec("npm", ["install", "-g", "lerna@4.0.0"]);
+      exec('npm', ['install', '-g', 'lerna@4.0.0']);
     }
   }
 };
@@ -402,7 +413,7 @@ exports.tryPublish = async (argv) => {
   if (argv.publish) {
     process.env.NODE_AUTH_TOKEN = argv.token;
     const keyword = getBumpKeyword(argv.cwd, argv.headRef, argv.baseRef);
-    if (keyword == "patch" || keyword == "prerelease") {
+    if (keyword === 'patch' || keyword === 'prerelease') {
       await publishCall(argv);
     }
   }
