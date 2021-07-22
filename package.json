@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-trader/action-bump-version",
-  "version": "3.0.12-alpha.0",
+  "version": "3.0.12",
   "main": "dist/index.js",
   "repository": "https://github.com/kungfu-trader/action-bump-version",
   "author": "Keren Dong",
@@ -20,9 +20,9 @@
     "yargs": "^16.2.0"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.27.0",
     "@ls-lint/ls-lint": "^1.9.0",
     "@typescript-eslint/parser": "^3.10.0",
+    "@vercel/ncc": "^0.27.0",
     "eslint": "^7.14.0",
     "prettier": "^2.3.0",
     "prettier-eslint-cli": "^5.0.0"
