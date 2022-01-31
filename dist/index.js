@@ -294,6 +294,15 @@ async function bumpCall(argv, keyword, message) {
 }
 
 async function publishCall(argv) {
+  const tryPublish = (cwd) => {
+    const packageConfig = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json')));
+    if (!packageConfig.private) {
+      const execOpts = { cwd: cwd, ...spawnOpts };
+      exec('npm', ['publish'], execOpts);
+    } else {
+      console.log(`> bypass private package ${packageConfig.name}`);
+    }
+  };
   if (hasLerna(argv.cwd)) {
     // https://github.com/lerna/lerna/issues/2404
     // Until lerna solves this issue we have to use yarn workspaces and npm publish
@@ -302,11 +311,10 @@ async function publishCall(argv) {
     const workspaces = JSON.parse(output);
     for (const key in workspaces) {
       const workspace = workspaces[key];
-      const execOpts = { cwd: path.join(argv.cwd, workspace.location), ...spawnOpts };
-      exec('npm', ['publish'], execOpts);
+      tryPublish(path.join(argv.cwd, workspace.location));
     }
   } else {
-    exec('npm', ['publish']);
+    tryPublish(argv.cwd);
   }
 }
 
