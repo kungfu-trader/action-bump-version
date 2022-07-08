@@ -386,6 +386,7 @@ async function mergeCall(argv, keyword) {
   }
 
   await ensureBranchesProtection(argv).catch(console.error);
+  resetDefaultBranch(argv);
 }
 async function resetDefaultBranch(argv){ //更改默认分支名
   const octokit = github.getOctokit(argv.token);
