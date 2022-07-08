@@ -386,7 +386,7 @@ async function mergeCall(argv, keyword) {
   }
 
   await ensureBranchesProtection(argv).catch(console.error);
-  resetDefaultBranch(argv); //在此处调用函数以更新默认分支名
+  await resetDefaultBranch(argv); //在此处调用函数以更新默认分支名
 }
 async function resetDefaultBranch(argv){ //更改默认分支名
   const octokit = github.getOctokit(argv.token);
@@ -403,12 +403,12 @@ async function resetDefaultBranch(argv){ //更改默认分支名
         }
       }
     }`,
-  );
+  );  
   const lastDevName = "dev/"+lastDevVersion; //给最新的版本号加上前缀
   await octokit.request('PATCH /repos/{owner}/{repo}', { //使用REST API来上传以更新默认分支名
-    owner: "${argv.owner}",
-    repo: "${argv.repo}",
-    default_branch: "${lastDevName}"
+    owner: `${argv.owner}`,
+    repo: `${argv.repo}`,
+    default_branch: `${lastDevName}`
   })
   }
 
