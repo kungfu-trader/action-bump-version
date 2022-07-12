@@ -390,7 +390,7 @@ async function mergeCall(argv, keyword) {
 }
 async function resetDefaultBranch(argv){ //更改默认分支名
   const octokit = github.getOctokit(argv.token);
-  const lastDevVersion = await octokit.graphql( //获取最新版本
+  const { lastDevVersion } = await octokit.graphql( //获取最新版本
     `query {
       repositories(name: "${argv.repo}", owner: "${argv.owner}") {
           refs(refPrefix: "refs/heads/dev/", last: 1){
@@ -404,7 +404,7 @@ async function resetDefaultBranch(argv){ //更改默认分支名
       }
     }`,
   );  
-  const lastDevName = "dev/"+lastDevVersion; //给最新的版本号加上前缀
+  const lastDevName = "dev/"+lastDevVersion.name; //给最新的版本号加上前缀
   await octokit.request('PATCH /repos/{owner}/{repo}', { //使用REST API来上传以更新默认分支名
     owner: `${argv.owner}`,
     repo: `${argv.repo}`,
