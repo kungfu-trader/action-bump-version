@@ -409,7 +409,7 @@ async function resetDefaultBranch(argv){ //更改默认分支名
     owner: `${argv.owner}`,
     repo: `${argv.repo}`,
     default_branch: `${lastDevName}`
-  })
+  });
   }
 
 exports.getChannel = getChannel;
