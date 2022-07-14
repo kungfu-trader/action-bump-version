@@ -230,8 +230,11 @@ async function ensureBranchesProtection(argv) {
       console.log(mutation);
       continue;
     }
+    console.log(`111`);    
     await octokit.graphql(mutation);
+    console.log(`222`);
   }
+  console.log(`3333`);
 }
 
 async function suspendBranchesProtection(argv, branchPatterns = ProtectedBranchPatterns) {
