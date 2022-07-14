@@ -400,15 +400,17 @@ async function resetDefaultBranch(argv){ //更改默认分支名
           }
         }
       }
-    }`,{ login: "octokit" }
+    }`
   );  //获取最新版本
-  const lastDevName = "dev/"+lastDevVersion.repository.refs.nodes.name; //给最新的版本号加上前缀
+  for (const lastVersion of lastDevVersion.repository.refs.nodes){
+    const lastDevName = "dev/"+lastVersion.name;
+  }
   const response = await octokit.request("PATCH /repos/{owner}/{repo}", { 
     owner: argv.owner,
     repo: argv.repo,
     default_branch: lastDevName
   });//使用REST API来上传以更新默认分支名
-  }
+}
 
 exports.getChannel = getChannel;
 
