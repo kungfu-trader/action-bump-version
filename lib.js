@@ -405,6 +405,7 @@ async function resetDefaultBranch(argv){ //更改默认分支名
   for (const lastVersion of lastDevVersion.repository.refs.nodes){
     const lastDevName = "dev/"+lastVersion.name;
   }
+  console.log(`name is : ${lastDevVersion.repository.refs.nodes.name}`);
   const response = await octokit.request("PATCH /repos/{owner}/{repo}", { 
     owner: argv.owner,
     repo: argv.repo,
