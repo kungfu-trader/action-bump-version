@@ -404,7 +404,7 @@ async function resetDefaultBranch(argv){ //更改默认分支名
       }
     }`,
   );  
-  const lastDevName = "refs/heads/dev/"+lastDevVersion.name; //给最新的版本号加上前缀
+  const lastDevName = "dev/"+lastDevVersion.name; //给最新的版本号加上前缀
   await octokit.request('PATCH /repos/{owner}/{repo}', { //使用REST API来上传以更新默认分支名
     owner: `${argv.owner}`,
     repo: `${argv.repo}`,
