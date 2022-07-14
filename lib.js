@@ -199,7 +199,7 @@ async function getBranchProtectionRulesMap(argv) {
 
 async function ensureBranchesProtection(argv) {
   if (!argv.protection) return;
-
+  console.log(00000);
   const octokit = github.getOctokit(argv.token);
   const ruleIds = await getBranchProtectionRulesMap(argv);
   for (const pattern in ruleIds) {
