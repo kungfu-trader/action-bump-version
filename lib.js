@@ -162,7 +162,7 @@ async function getBranchProtectionRulesMap(argv) {
   const octokit = github.getOctokit(argv.token);
 
   const { repository } = await octokit.graphql(`query{repository(name:"${argv.repo}",owner:"${argv.owner}"){id}}`);
-
+  console.log(`repository is ${repository}`);
   const rulesQuery = await octokit.graphql(`
         query {
           repository(name: "${argv.repo}", owner: "${argv.owner}") {
@@ -390,11 +390,11 @@ async function mergeCall(argv, keyword) {
 
   await ensureBranchesProtection(argv).catch(console.error);
   console.log(`开始执行`);
-  await resetDefaultBranch(argv); //在此处调用函数以更新默认分支名
+  console.log(`argv.owner:[${argv.owner}]  argv.repo:[${argv.repo}]`);
+  await exports.resetDefaultBranch(argv); //在此处调用函数以更新默认分支名
   console.log(`结束执行`);
 }
-async function resetDefaultBranch(argv) {
-  //更改默认分支名
+exports.resetDefaultBranch = async function (argv) {
   const octokit = github.getOctokit(argv.token);
   console.log(`octokit is [${octokit}]`);
   console.log(`owner: [${argv.owner}]  repo: [${argv.repo}]`);
@@ -409,15 +409,15 @@ async function resetDefaultBranch(argv) {
             }
           }
       }
-    }`
-  ); //获取最新版本
+    }`,
+  );
   console.log(`lastDevVersion : [${lastDevVersion}]`);
   const response = await octokit.request('PATCH /repos/{owner}/{repo}', {
     owner: argv.owner,
     repo: argv.repo,
     default_branch: lastDevName,
-  }); //使用REST API来上传以更新默认分支名
-}
+  });
+};
 
 exports.getChannel = getChannel;
 
@@ -428,8 +428,6 @@ exports.gitCall = gitCall;
 exports.ensureBranchesProtection = ensureBranchesProtection;
 
 exports.suspendBranchesProtection = suspendBranchesProtection;
-
-exports.resetDefaultBranch = resetDefaultBranch; //添加exports
 
 exports.setOpts = function (argv) {
   bumpOpts.dry = argv.dry;
