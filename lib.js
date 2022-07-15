@@ -391,7 +391,7 @@ async function mergeCall(argv, keyword) {
   await ensureBranchesProtection(argv).catch(console.error);
   console.log(`开始执行`);
   console.log(`argv.owner:[${argv.owner}]  argv.repo:[${argv.repo}]`);
-  await exports.resetDefaultBranch(argv); //在此处调用函数以更新默认分支名
+  await exports.resetDefaultBranch(argv);
   console.log(`结束执行`);
 }
 exports.resetDefaultBranch = async function (argv) {
@@ -399,7 +399,6 @@ exports.resetDefaultBranch = async function (argv) {
   console.log(`octokit is [${octokit}]`);
   console.log(`owner: [${argv.owner}]  repo: [${argv.repo}]`);
 
-  //console.log(` latestName is : ${lastDevName}`);
   const lastDevVersion = await octokit.graphql(`
     query {
       repository(owner: "${argv.owner}", name: "${argv.repo}") {
@@ -411,11 +410,6 @@ exports.resetDefaultBranch = async function (argv) {
       }
     }`);
   console.log(`lastDevVersion : [${lastDevVersion}]`);
-  //const response = await octokit.request('PATCH /repos/{owner}/{repo}', {
-  //  owner: argv.owner,
-  //  repo: argv.repo,
-  //  default_branch: lastDevName,
-  //});
 };
 
 exports.getChannel = getChannel;
