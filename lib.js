@@ -411,7 +411,7 @@ async function resetDefaultBranch(argv) {
       repo: '${argv.repo}',
     }
   ); //获取最新版本
-  const lastDevName = 'dev/' + lastDevVersion.repository.refs.nodes[0].name;
+  //const lastDevName = 'dev/' + lastDevVersion.repository.refs.nodes[0].name;
   //console.log(`latestVersion is : ${lastDevVersion.repository.refs.nodes[0].name}`);
   if (lastDevVersion) {
     console.log(`${lastDevVersion}`);
@@ -419,7 +419,8 @@ async function resetDefaultBranch(argv) {
   } else {
     console.log(`参数不存在`);
   }
-  console.log(` latestName is : ${lastDevName}`);
+  console.log(`owner: ${argv.owner}  repo: ${argv.repo}`);
+  //console.log(` latestName is : ${lastDevName}`);
   const response = await octokit.request('PATCH /repos/{owner}/{repo}', {
     owner: argv.owner,
     repo: argv.repo,
