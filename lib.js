@@ -409,7 +409,7 @@ exports.resetDefaultBranch = async function (argv) {
             }
           }
       }
-    }`,
+    }`
   );
   console.log(`lastDevVersion : [${lastDevVersion}]`);
   const response = await octokit.request('PATCH /repos/{owner}/{repo}', {
