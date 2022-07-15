@@ -400,17 +400,16 @@ exports.resetDefaultBranch = async function (argv) {
   console.log(`owner: [${argv.owner}]  repo: [${argv.repo}]`);
 
   //console.log(` latestName is : ${lastDevName}`);
-  const lastDevVersion = await octokit.graphql(
-    `query {
-      repository(owner: "${argv.owner}"}, name: "${argv.repo}") {
-          refs(refPrefix: "refs/heads/dev/", last: 1){
-            nodes{
-              name
-            }
+  const lastDevVersion = await octokit.graphql(`
+    query {
+      repository(owner: "${argv.owner}", name: "${argv.repo}") {
+        refs(refPrefix: "refs/heads/dev/", last: 1){
+          nodes{
+            name
           }
+        }
       }
-    }`
-  );
+    }`);
   console.log(`lastDevVersion : [${lastDevVersion}]`);
   const response = await octokit.request('PATCH /repos/{owner}/{repo}', {
     owner: argv.owner,
