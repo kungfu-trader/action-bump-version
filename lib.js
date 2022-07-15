@@ -403,19 +403,19 @@ exports.resetDefaultBranch = async function (argv) {
   const lastDevVersion = await octokit.graphql(`
     query {
       repository(owner: "${argv.owner}", name: "${argv.repo}") {
-        refs(refPrefix: "refs/heads/dev/", last: 1){
-          nodes{
+        refs(refPrefix: "refs/heads/dev/", last: 1) {
+          nodes {
             name
           }
         }
       }
     }`);
   console.log(`lastDevVersion : [${lastDevVersion}]`);
-  const response = await octokit.request('PATCH /repos/{owner}/{repo}', {
-    owner: argv.owner,
-    repo: argv.repo,
-    default_branch: lastDevName,
-  });
+  //const response = await octokit.request('PATCH /repos/{owner}/{repo}', {
+  //  owner: argv.owner,
+  //  repo: argv.repo,
+  //  default_branch: lastDevName,
+  //});
 };
 
 exports.getChannel = getChannel;
