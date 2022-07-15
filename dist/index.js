@@ -559,7 +559,7 @@ async function resetDefaultBranch(argv) {
   const octokit = github.getOctokit(argv.token);
   const lastDevVersion = await octokit.graphql(
     `query {
-      repository(name: "${argv.repo}", owner: "${argv.owner}") {
+      repository(owner: $owner, name: $repo) {
           refs(refPrefix: "refs/heads/dev/", last: 1){
             nodes{
               name
@@ -567,6 +567,10 @@ async function resetDefaultBranch(argv) {
           }
       }
     }`,
+    {
+      owner: '${argv.owner}',
+      repo: '${argv.repo}',
+    },
   ); //获取最新版本
   const lastDevName = 'dev/' + lastDevVersion.repository.refs.nodes[0].name;
   //console.log(`latestVersion is : ${lastDevVersion.repository.refs.nodes[0].name}`);
