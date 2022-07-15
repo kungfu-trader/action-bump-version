@@ -396,31 +396,22 @@ async function mergeCall(argv, keyword) {
 async function resetDefaultBranch(argv) {
   //更改默认分支名
   const octokit = github.getOctokit(argv.token);
+  console.log(`octokit is [${octokit}]`);
+  console.log(`owner: [${argv.owner}]  repo: [${argv.repo}]`);
+
+  //console.log(` latestName is : ${lastDevName}`);
   const lastDevVersion = await octokit.graphql(
     `query {
-      repository(owner: $owner, name: $repo) {
+      repository(owner: "${argv.owner}"}, name: "${argv.repo}") {
           refs(refPrefix: "refs/heads/dev/", last: 1){
             nodes{
               name
             }
           }
       }
-    }`,
-    {
-      owner: '${argv.owner}',
-      repo: '${argv.repo}',
-    }
+    }`
   ); //获取最新版本
-  //const lastDevName = 'dev/' + lastDevVersion.repository.refs.nodes[0].name;
-  //console.log(`latestVersion is : ${lastDevVersion.repository.refs.nodes[0].name}`);
-  if (lastDevVersion) {
-    console.log(`${lastDevVersion}`);
-    console.log(lastDevVersion);
-  } else {
-    console.log(`参数不存在`);
-  }
-  console.log(`owner: ${argv.owner}  repo: ${argv.repo}`);
-  //console.log(` latestName is : ${lastDevName}`);
+  console.log(`lastDevVersion : [${lastDevVersion}]`);
   const response = await octokit.request('PATCH /repos/{owner}/{repo}', {
     owner: argv.owner,
     repo: argv.repo,
