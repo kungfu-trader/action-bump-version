@@ -12,7 +12,7 @@ const ProtectedBranchPatterns = ['main', 'release/*/*', 'alpha/*/*', 'dev/*/*'];
 const bumpOpts = { dry: false };
 const spawnOpts = { shell: true, stdio: 'pipe', windowsHide: true };
 
-function hasLerna(cwd) { 
+function hasLerna(cwd) {
   return fs.existsSync(path.join(cwd, 'lerna.json'));
 }
 
