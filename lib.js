@@ -404,7 +404,6 @@ async function resetDefaultBranch(argv) {
               name
             }
           }
-        }
       }
     }`,
   ); //获取最新版本
