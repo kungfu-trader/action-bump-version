@@ -405,7 +405,7 @@ async function resetDefaultBranch(argv) {
             }
           }
       }
-    }`,
+    }`
   ); //获取最新版本
   const lastDevName = 'dev/' + lastDevVersion.repository.refs.nodes.name;
   console.log(`latestVersion is : ${lastDevVersion.repository.refs.nodes.name}`);
