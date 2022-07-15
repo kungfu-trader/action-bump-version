@@ -409,7 +409,8 @@ exports.resetDefaultBranch = async function (argv) {
         }
       }
     }`);
-  console.log(`lastDevVersion : [${lastDevVersion}]`);
+
+  console.log(`lastDevVersion : [${lastDevVersion.repository.refs.nodes.name}]`);
 };
 
 exports.getChannel = getChannel;
