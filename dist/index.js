@@ -220,7 +220,7 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
     'release->release': 'preminor',
     'main->main': 'premajor',
   };
-
+  ``;
   const lts = baseChannel === 'release' && baseRef.split('/').pop() === 'lts';
   const preminor = headChannel === 'release' && (baseChannel === 'main' || lts);
 
@@ -323,7 +323,7 @@ async function getBranchProtectionRulesMap(argv) {
   const octokit = github.getOctokit(argv.token);
 
   const { repository } = await octokit.graphql(`query{repository(name:"${argv.repo}",owner:"${argv.owner}"){id}}`);
-  console.log(`repository is ${repository}`);
+
   const rulesQuery = await octokit.graphql(`
         query {
           repository(name: "${argv.repo}", owner: "${argv.owner}") {
@@ -360,7 +360,7 @@ async function getBranchProtectionRulesMap(argv) {
 
 async function ensureBranchesProtection(argv) {
   if (!argv.protection) return;
-  console.log(00000);
+
   const octokit = github.getOctokit(argv.token);
   const ruleIds = await getBranchProtectionRulesMap(argv);
   for (const pattern in ruleIds) {
@@ -391,11 +391,8 @@ async function ensureBranchesProtection(argv) {
       console.log(mutation);
       continue;
     }
-    console.log(`111`);
     await octokit.graphql(mutation);
-    console.log(`222`);
   }
-  console.log(`3333`);
 }
 
 async function suspendBranchesProtection(argv, branchPatterns = ProtectedBranchPatterns) {
@@ -550,36 +547,32 @@ async function mergeCall(argv, keyword) {
   }
 
   await ensureBranchesProtection(argv).catch(console.error);
-  console.log(`开始执行`);
-
   await exports.resetDefaultBranch(argv);
-  console.log(`结束执行`);
 }
 exports.resetDefaultBranch = async function (argv) {
   const octokit = github.getOctokit(argv.token);
-  console.log(`octokit is [${octokit}]`);
-  console.log(`owner: [${argv.owner}]  repo: [${argv.repo}]`);
-
   const lastDevVersion = await octokit.graphql(`
     query {
       repository(owner: "${argv.owner}", name: "kfext_xele") {
         refs(refPrefix: "refs/heads/dev/", last: 1) {
           edges {
             node {
-              name
+             name
             }
           } 
         }
       }
     }`);
   if (typeof lastDevVersion.repository.refs.edges[0] == 'undefined') {
-    console.log('run bro bro');
-    console.log(typeof lastDevVersion);
     return;
-  } else {
-    console.log('判断失效');
-    console.log(typeof lastDevVersion);
   }
+  const tempStoreName = preventFromUDefine + lastDevVersion.repository.refs.edges[0].node.name;
+  const lastDevName = 'dev/' + tempStoreName;
+  await octokit.request('PATCH /repos/{owner}/{repo}', {
+    owner: argv.owner,
+    repo: argv.repo,
+    default_branch: lastDevName,
+  });
 };
 
 exports.getChannel = getChannel;
