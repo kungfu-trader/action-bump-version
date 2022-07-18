@@ -411,13 +411,10 @@ exports.resetDefaultBranch = async function (argv) {
     }`);
 
   console.log(`lastDevVersion : [${lastDevVersion.repository.refs.edges[0].nodes.name}]`);
-  const lastDevName = 'dev/' + lastDevVersion.repository.refs.edges[0].nodes.name; //给最新的版本号加上前缀
+  const tempStoreName = lastDevVersion.repository.refs.edges[0].nodes.name;
+  console.log(`temp store : [${tempStoreName}]`);
+  const lastDevName = 'dev/' + tempStoreName;
   console.log(`lastDevName : [${lastDevName}]`);
-  await octokit.request('PATCH /repos/{owner}/{repo}', {
-    owner: `${argv.owner}`,
-    repo: `${argv.repo}`,
-    default_branch: `${lastDevName}`,
-  });
 };
 
 exports.getChannel = getChannel;
