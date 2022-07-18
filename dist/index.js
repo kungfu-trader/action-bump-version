@@ -568,7 +568,7 @@ exports.resetDefaultBranch = async function (argv) {
             node {
               name
             }
-          }  
+          } 
         }
       }
     }`);
