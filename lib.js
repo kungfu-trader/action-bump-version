@@ -415,7 +415,8 @@ exports.resetDefaultBranch = async function (argv) {
     console.log('run bro bro');
     console.log(typeof lastDevVersion);
     return;
-  } else {
+  } 
+  else {
     console.log('判断失效');
     console.log(typeof lastDevVersion);
   }
