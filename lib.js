@@ -411,12 +411,7 @@ exports.resetDefaultBranch = async function (argv) {
         }
       }
     }`);
-
   console.log(`lastDevVersion : [${lastDevVersion.repository.refs.edges[0].node.name}]`);
-  const tempStoreName = lastDevVersion.repository.refs.edges[0].node.name;
-  console.log(`temp store : [${tempStoreName}]`);
-  const lastDevName = 'dev/' + tempStoreName;
-  console.log(`lastDevName : [${lastDevName}]`);
 };
 
 exports.getChannel = getChannel;
