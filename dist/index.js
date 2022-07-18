@@ -576,18 +576,10 @@ exports.resetDefaultBranch = async function (argv) {
     console.log('run bro bro');
     console.log(typeof lastDevVersion);
     return;
+  } else {
+    console.log('判断失效');
+    console.log(typeof lastDevVersion);
   }
-  console.log(`lastDevVersion : [${lastDevVersion.repository.refs.edges[0].node.name}]`);
-  const tempStoreName = preventFromUDefine + lastDevVersion.repository.refs.edges[0].node.name;
-  console.log(`temp store : [${tempStoreName}]`);
-  const lastDevName = 'dev/' + tempStoreName;
-  console.log(`lastDevName : [${lastDevName}]`);
-
-  await octokit.request('PATCH /repos/{owner}/{repo}', {
-    owner: argv.owner,
-    repo: argv.repo,
-    default_branch: lastDevName,
-  });
 };
 
 exports.getChannel = getChannel;
