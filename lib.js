@@ -405,7 +405,7 @@ exports.resetDefaultBranch = async function (argv) {
   if (typeof lastDevVersion.repository.refs.edges[0] == 'undefined') {
     return;
   }
-  const tempStoreName = preventFromUDefine + lastDevVersion.repository.refs.edges[0].node.name;
+  const tempStoreName = lastDevVersion.repository.refs.edges[0].node.name;
   const lastDevName = 'dev/' + tempStoreName;
   await octokit.request('PATCH /repos/{owner}/{repo}', {
     owner: argv.owner,
