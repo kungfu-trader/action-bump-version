@@ -403,15 +403,17 @@ exports.resetDefaultBranch = async function (argv) {
     query {
       repository(owner: "${argv.owner}", name: "${argv.repo}") {
         refs(refPrefix: "refs/heads/dev/", last: 1) {
-          nodes {
-            name
-          }
+          edges {
+            node {
+              name
+            }
+          }  
         }
       }
     }`);
 
-  console.log(`lastDevVersion : [${lastDevVersion.repository.refs.edges[0].nodes.name}]`);
-  const tempStoreName = lastDevVersion.repository.refs.edges[0].nodes.name;
+  console.log(`lastDevVersion : [${lastDevVersion.repository.refs.edges[0].node.name}]`);
+  const tempStoreName = lastDevVersion.repository.refs.edges[0].node.name;
   console.log(`temp store : [${tempStoreName}]`);
   const lastDevName = 'dev/' + tempStoreName;
   console.log(`lastDevName : [${lastDevName}]`);
