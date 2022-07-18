@@ -545,7 +545,6 @@ async function mergeCall(argv, keyword) {
     await gitCall('push', 'origin', `HEAD:${devChannel}`);
     await gitCall('switch', argv.baseRef);
   }
-
   await ensureBranchesProtection(argv).catch(console.error);
   await exports.resetDefaultBranch(argv);
 }
