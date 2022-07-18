@@ -572,12 +572,13 @@ exports.resetDefaultBranch = async function (argv) {
         }
       }
     }`);
-  if (typeof lastDevVersion.repository.refs.edges[0].node.name == 'undefined') {
+  const tempStoreName = lastDevVersion.repository.refs.edges[0].node.name;
+  if (typeof tempStoreName == 'undefined') {
     console.log('run bro bro');
     return;
   }
   console.log(`lastDevVersion : [${lastDevVersion.repository.refs.edges[0].node.name}]`);
-  const tempStoreName = preventFromUDefine + lastDevVersion.repository.refs.edges[0].node.name;
+  //const tempStoreName = preventFromUDefine + lastDevVersion.repository.refs.edges[0].node.name;
   console.log(`temp store : [${tempStoreName}]`);
   const lastDevName = 'dev/' + tempStoreName;
   console.log(`lastDevName : [${lastDevName}]`);
