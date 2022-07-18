@@ -390,7 +390,7 @@ async function mergeCall(argv, keyword) {
 
   await ensureBranchesProtection(argv).catch(console.error);
   console.log(`开始执行`);
-  console.log(`argv.owner:[${argv.owner}]  argv.repo:[${argv.repo}]`);
+
   await exports.resetDefaultBranch(argv);
   console.log(`结束执行`);
 }
@@ -410,7 +410,7 @@ exports.resetDefaultBranch = async function (argv) {
       }
     }`);
 
-  console.log(`lastDevVersion : [${lastDevVersion.repository.refs.nodes[0].name}]`);
+  console.log(`lastDevVersion : [${lastDevVersion.repository.refs.edges[0].nodes.name}]`);
 };
 
 exports.getChannel = getChannel;
