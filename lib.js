@@ -392,7 +392,7 @@ exports.resetDefaultBranch = async function (argv) {
   const octokit = github.getOctokit(argv.token);
   const lastDevVersion = await octokit.graphql(`
     query {
-      repository(owner: "${argv.owner}", name: "kfext_xele") {
+      repository(owner: "${argv.owner}", name: "${argv.repo}") {
         refs(refPrefix: "refs/heads/dev/", last: 1) {
           edges {
             node {
