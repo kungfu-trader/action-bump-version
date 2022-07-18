@@ -401,7 +401,7 @@ exports.resetDefaultBranch = async function (argv) {
 
   const lastDevVersion = await octokit.graphql(`
     query {
-      repository(owner: "${argv.owner}", name: "${argv.repo}") {
+      repository(owner: "${argv.owner}", name: "kfext_xele") {
         refs(refPrefix: "refs/heads/dev/", last: 1) {
           edges {
             node {
@@ -411,8 +411,12 @@ exports.resetDefaultBranch = async function (argv) {
         }
       }
     }`);
+  if (typeof lastDevVersion.repository.refs.edges[0].node.name == 'undefined') {
+    console.log('run bro');
+    return;
+  }
   console.log(`lastDevVersion : [${lastDevVersion.repository.refs.edges[0].node.name}]`);
-  const tempStoreName = lastDevVersion.repository.refs.edges[0].node.name;
+  const tempStoreName = preventFromUDefine + lastDevVersion.repository.refs.edges[0].node.name;
   console.log(`temp store : [${tempStoreName}]`);
   const lastDevName = 'dev/' + tempStoreName;
   console.log(`lastDevName : [${lastDevName}]`);
