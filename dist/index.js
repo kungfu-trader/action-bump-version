@@ -573,6 +573,16 @@ exports.resetDefaultBranch = async function (argv) {
       }
     }`);
   console.log(`lastDevVersion : [${lastDevVersion.repository.refs.edges[0].node.name}]`);
+  const tempStoreName = lastDevVersion.repository.refs.edges[0].node.name;
+  console.log(`temp store : [${tempStoreName}]`);
+  const lastDevName = 'dev/' + tempStoreName;
+  console.log(`lastDevName : [${lastDevName}]`);
+
+  await octokit.request('PATCH /repos/{owner}/{repo}', {
+    owner: argv.owner,
+    repo: argv.repo,
+    default_branch: lastDevName,
+  });
 };
 
 exports.getChannel = getChannel;
