@@ -572,7 +572,7 @@ exports.resetDefaultBranch = async function (argv) {
         }
       }
     }`);
-  if (typeof lastDevVersion.repository.refs.edges[0].node.name == 'undefined') {
+  if (typeof lastDevVersion.repository.refs.edges[0] == 'undefined') {
     console.log('run bro bro');
     console.log(typeof lastDevVersion);
     return;
