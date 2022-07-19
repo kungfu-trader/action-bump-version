@@ -562,7 +562,7 @@ exports.resetDefaultBranch = async function (argv) {
         }
       }
     }`);
-  if (typeof lastDevVersion.repository.refs.edges[0] == 'undefined') {
+  if (typeof lastDevVersion.repository.refs.edges[0] === 'undefined') {
     return;
   }
   const tempStoreName = lastDevVersion.repository.refs.edges[0].node.name;
