@@ -26,5 +26,10 @@
     "eslint": "^7.14.0",
     "prettier": "^2.3.0",
     "prettier-eslint-cli": "^5.0.0"
+  },
+  "resolutions":{
+    "got": "^12.1.0",
+    "json-schema": "0.4.0",
+    "ansi-regex": "5.0.1"
   }
 }
