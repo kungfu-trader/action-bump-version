@@ -220,7 +220,7 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
     'release->release': 'preminor',
     'main->main': 'premajor',
   };
-
+  ``;
   const lts = baseChannel === 'release' && baseRef.split('/').pop() === 'lts';
   const preminor = headChannel === 'release' && (baseChannel === 'main' || lts);
 
@@ -545,9 +545,34 @@ async function mergeCall(argv, keyword) {
     await gitCall('push', 'origin', `HEAD:${devChannel}`);
     await gitCall('switch', argv.baseRef);
   }
-
   await ensureBranchesProtection(argv).catch(console.error);
+  await exports.resetDefaultBranch(argv);
 }
+exports.resetDefaultBranch = async function (argv) {
+  const octokit = github.getOctokit(argv.token);
+  const lastDevVersion = await octokit.graphql(`
+    query {
+      repository(owner: "${argv.owner}", name: "${argv.repo}") {
+        refs(refPrefix: "refs/heads/dev/", last: 1) {
+          edges {
+            node {
+             name
+            }
+          } 
+        }
+      }
+    }`);
+  if (typeof lastDevVersion.repository.refs.edges[0] === 'undefined') {
+    return;
+  }
+  const tempStoreName = lastDevVersion.repository.refs.edges[0].node.name;
+  const lastDevName = 'dev/' + tempStoreName;
+  await octokit.request('PATCH /repos/{owner}/{repo}', {
+    owner: argv.owner,
+    repo: argv.repo,
+    default_branch: lastDevName,
+  });
+};
 
 exports.getChannel = getChannel;
 
