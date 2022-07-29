@@ -59,7 +59,7 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
     'release->release': 'preminor',
     'main->main': 'premajor',
   };
-  ``;
+
   const lts = baseChannel === 'release' && baseRef.split('/').pop() === 'lts';
   const preminor = headChannel === 'release' && (baseChannel === 'main' || lts);
 
@@ -154,7 +154,7 @@ async function publishCall(argv) {
       const workspace = workspaces[key];
       tryPublish(path.join(argv.cwd, workspace.location));
     }
-  } else { 
+  } else {
     tryPublish(argv.cwd);
   }
 }

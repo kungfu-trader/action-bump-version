@@ -220,7 +220,7 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
     'release->release': 'preminor',
     'main->main': 'premajor',
   };
-  ``;
+
   const lts = baseChannel === 'release' && baseRef.split('/').pop() === 'lts';
   const preminor = headChannel === 'release' && (baseChannel === 'main' || lts);
 
