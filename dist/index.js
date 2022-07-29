@@ -303,7 +303,7 @@ async function publishCall(argv) {
       console.log(`> bypass private package ${packageConfig.name}`);
     }
   };
-  if (!hasLerna(argv.cwd)) {
+  /*if (!hasLerna(argv.cwd)) {
     //add!
     // https://github.com/lerna/lerna/issues/2404
     // Until lerna solves this issue we have to use yarn workspaces and npm publish
@@ -315,9 +315,8 @@ async function publishCall(argv) {
       const workspace = workspaces[key];
       tryPublish(path.join(argv.cwd, workspace.location));
     }
-  } else {
-    tryPublish(argv.cwd);
-  }
+  } else {*/
+  tryPublish(argv.cwd);
 }
 
 async function getBranchProtectionRulesMap(argv) {
