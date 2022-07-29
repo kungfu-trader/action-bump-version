@@ -154,7 +154,7 @@ async function publishCall(argv) {
       const workspace = workspaces[key];
       tryPublish(path.join(argv.cwd, workspace.location));
     }
-  } else { 
+  } else {
     tryPublish(argv.cwd);
   }
 }
