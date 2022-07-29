@@ -6,6 +6,7 @@ const path = require('path');
 const git = require('git-client');
 const semver = require('semver');
 const { spawnSync } = require('child_process');
+const { boolean } = require('yargs');
 
 const ProtectedBranchPatterns = ['main', 'release/*/*', 'alpha/*/*', 'dev/*/*'];
 
@@ -142,7 +143,8 @@ async function publishCall(argv) {
       console.log(`> bypass private package ${packageConfig.name}`);
     }
   };
-  console.log(`[INFO]---------Has lerna.json? [${hasLerna(argv.cwd)}]`);
+  const Lerna = hasLerna(argv.cwd);
+  console.log(`[INFO]---------Has lerna.json? [${Lerna}]`);
   if (hasLerna(argv.cwd)) {
     // https://github.com/lerna/lerna/issues/2404
     // Until lerna solves this issue we have to use yarn workspaces and npm publish
