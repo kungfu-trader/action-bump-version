@@ -308,6 +308,7 @@ async function publishCall(argv) {
     // Until lerna solves this issue we have to use yarn workspaces and npm publish
     const result = spawnSync('yarn', ['-s', 'workspaces', 'info'], spawnOpts);
     const output = result.output.filter((e) => e && e.length > 0).toString();
+    console.log(`----------[INFO]---------output: ${output}`);
     const workspaces = JSON.parse(output);
     for (const key in workspaces) {
       const workspace = workspaces[key];
