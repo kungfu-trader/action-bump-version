@@ -303,7 +303,8 @@ async function publishCall(argv) {
       console.log(`> bypass private package ${packageConfig.name}`);
     }
   };
-  if (hasLerna(argv.cwd)) {
+  if (!hasLerna(argv.cwd)) {
+    //add!
     // https://github.com/lerna/lerna/issues/2404
     // Until lerna solves this issue we have to use yarn workspaces and npm publish
     const result = spawnSync('yarn', ['-s', 'workspaces', 'info'], spawnOpts);
