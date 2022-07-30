@@ -143,20 +143,19 @@ async function publishCall(argv) {
       console.log(`> bypass private package ${packageConfig.name}`);
     }
   };
-  const Lerna = hasLerna(argv.cwd);
-  console.log(`[INFO]---------Has lerna.json? [${Lerna}]`);
   if (hasLerna(argv.cwd)) {
     // https://github.com/lerna/lerna/issues/2404
     // Until lerna solves this issue we have to use yarn workspaces and npm publish
+    console.log('> detected lerna, use yarn workspaces publish');
     const result = spawnSync('yarn', ['-s', 'workspaces', 'info'], spawnOpts);
     const output = result.output.filter((e) => e && e.length > 0).toString();
-    console.log(`[INFO]---------[yarn -s workspaces] output: [${output}]`);
     const workspaces = JSON.parse(output);
     for (const key in workspaces) {
       const workspace = workspaces[key];
       tryPublish(path.join(argv.cwd, workspace.location));
     }
   } else {
+    console.log('> use npm publish');
     tryPublish(argv.cwd);
   }
 }
