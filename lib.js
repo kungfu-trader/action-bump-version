@@ -438,7 +438,7 @@ exports.ensureLerna = (argv) => {
   if (hasLerna(argv.cwd)) {
     const result = spawnSync('lerna', ['--version'], spawnOpts);
     if (result.status !== 0) {
-      exec('npm', ['install', '-g', 'lerna@4.0.0']);
+      exec('npm', ['install', '-g', 'lerna@^5.0.0']);
     }
   }
 };
