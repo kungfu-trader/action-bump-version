@@ -704,7 +704,7 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
 exports.traversalMessage = async function (argv) {
   const octokit = github.getOctokit(argv.token);
   let countVersion = 0; //该变量用于存储当前位置
-  let countPackage = 0; //store steps of for-loops
+  let countPackage = 0;
   let traversalResult = []; //该变量用于存储json信息
   for await (const graphPackage of traversalPackagesGraphQL(octokit)) {
     const package_name = graphPackage.name;
