@@ -585,10 +585,10 @@ async function* traversalPackagesGraphQL(octokit) {
   const maxPerPage = 100; //const是常量，每页最大值，这里定义为100，默认为30
   let startCursor = ''; //因为后续这里肯定是string类型的，所以这里先给它初始化为“”，注意不能初始化为=null，有风险
   do {
-    const graphResponse = octokit.graphql(`
+    const graphResponse = await octokit.graphql(`
       query{
         organization(login: "kungfu-trader") {
-          packages(first: "${maxPerPage}", after: "${startCursor}") {
+          packages(first: ${maxPerPage}, after: ${startCursor}) {
             totalCount
             pageInfo {
               hasNextPage
@@ -605,7 +605,7 @@ async function* traversalPackagesGraphQL(octokit) {
             }
           }
         }
-      }`);
+      }`); //这里的first后面所需为int，而加了引号之后就成为string，所以要去掉引号
     for (const graphPackage of graphResponse.organization.packages.nodes) {
       yield graphPackage;
     }
@@ -620,13 +620,13 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
   const maxPerPage = 100; //const是常量，每页最大值，这里定义为100，默认为30
   let startCursor = ''; //因为后续这里肯定是string类型的，所以这里先给它初始化为“”，注意不能初始化为=null，有风险
   do {
-    const graphResponse = octokit.graphql(`
+    const graphResponse = await octokit.graphql(`
       query{
-        repository(name: "${repository_name}", owner: "kungfu-trader") {
-          packages(names: "${package_name}", last: 1, after: "${startCursor}") {
+        repository(name: "action-bump-version", owner: "kungfu-trader") {
+          packages(names: "action-bump-version", last: 1, after: ${startCursor}) {
             totalCount
             nodes {
-              versions(first: "${maxPerPage}") {
+              versions(first: ${maxPerPage}) {
                 nodes {
                   version
                 }
@@ -638,7 +638,8 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
             }
           }
         }
-      }`);
+      }`); //startCursor自身就是sting，是否还需要引号？
+    //为了测试，这里将package和repo指定为action-bump-version
     for (const graphVersion of graphResponse.repository.packages.nodes[0].versions.nodes) {
       yield graphVersion;
     }
@@ -672,6 +673,7 @@ exports.traversalMessage = async function (argv) {
     }
   }
   console.log(JSON.stringify(traversalResult)); //用于控制台输出最终结果
+  console.log(traversalResult.length); //用于测试数组长度看看遍历能否进入下一页
 };
 
 exports.getChannel = getChannel;
