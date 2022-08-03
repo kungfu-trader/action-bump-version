@@ -457,7 +457,7 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
   //循环遍历获取所有Versions的graphQL方法
   let hasNextPage = false; //let是可变变量,是否有下一页，用以判断是否要继续循环
   const maxPerPage = 100; //const是常量，每页最大值，这里定义为100，默认为30
-  //let startCursor = ''; //因为后续这里肯定是string类型的，所以这里先给它初始化为“”，注意不能初始化为=null，有风险
+  let startCursor = ''; //因为后续这里肯定是string类型的，所以这里先给它初始化为“”，注意不能初始化为=null，有风险
   do {
     const graphResponse = await octokit.graphql(`
       query{
