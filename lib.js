@@ -487,8 +487,8 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
   //let startCursor = ''; //因为后续这里肯定是string类型的，所以这里先给它初始化为“”，注意不能初始化为=null，有风险
   const graphResponse = await octokit.graphql(`
   query{
-    repository(name: "${repository_name}", owner: "kungfu-trader") {
-      packages(names: "${package_name}", last: 1) {
+    repository(name: "action-bump-version", owner: "kungfu-trader") {
+      packages(names: "action-bump-version", last: 1) {
         totalCount
         nodes {
           versions(first: ${maxPerPage}) {
