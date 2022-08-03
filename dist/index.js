@@ -624,7 +624,7 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
     const graphResponse = await octokit.graphql(`
       query{
         repository(name: "action-bump-version", owner: "kungfu-trader") {
-          packages(names: "action-bump-version", last: 1, after: ${startCursor}) {
+          packages(names: "action-bump-version", last: 1, after: "${startCursor}") {
             totalCount
             nodes {
               versions(first: ${maxPerPage}) {
@@ -641,6 +641,7 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
         }
       }`); //startCursor自身就是sting，是否还需要引号？
     //为了测试，这里将package和repo指定为action-bump-version
+    //如果这次还是提示after后的内容为空（即startCursor未赋有效值的原因）则将其在do-while循环前不加after执行一次并将结构变为while-do
     for (const graphVersion of graphResponse.repository.packages.nodes[0].versions.nodes) {
       yield graphVersion;
     }
@@ -671,6 +672,7 @@ exports.traversalMessage = async function (argv) {
       };
       traversalResult.push(tempStoreResult);
       countNode++;
+      break; //这里加个break用于测试，这样只用遍历一次
     }
   }
   console.log(JSON.stringify(traversalResult)); //用于控制台输出最终结果
