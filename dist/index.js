@@ -689,7 +689,7 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
             }
           }
         }
-      }`); //startCursor自身就是sting，是否还需要引号？(看起来还是需要的)
+      }`); //startCursor自身就是sting，是否还需要引号？
     //为了测试，这里将package和repo指定为action-bump-version
     //如果这次还是提示after后的内容为空（即startCursor未赋有效值的原因）则将其在do-while循环前不加after执行一次并将结构变为while-do
     for (const graphVersion of graphResponse.repository.packages.nodes[0].versions.nodes) {
