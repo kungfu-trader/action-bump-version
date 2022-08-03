@@ -647,7 +647,7 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
     startCursor = graphResponse.repository.packages.nodes[0].versions.pageInfo.endCursor;
   } while (hasNextPage);
 }
-
+//ceshibianhua
 //实现了上述rest及graphQL查询方法后，下面构建调用函数完成整个查询，这里使用exports
 //exports.traversalMessage = async function (octokit) {
 exports.traversalMessage = async function (argv) {
