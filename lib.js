@@ -6,6 +6,7 @@ const path = require('path');
 const git = require('git-client');
 const semver = require('semver');
 const { spawnSync } = require('child_process');
+const { boolean } = require('yargs');
 
 const ProtectedBranchPatterns = ['main', 'release/*/*', 'alpha/*/*', 'dev/*/*'];
 
@@ -59,7 +60,7 @@ function getBumpKeyword(cwd, headRef, baseRef, loose = false) {
     'release->release': 'preminor',
     'main->main': 'premajor',
   };
-  ``;
+
   const lts = baseChannel === 'release' && baseRef.split('/').pop() === 'lts';
   const preminor = headChannel === 'release' && (baseChannel === 'main' || lts);
 
@@ -145,15 +146,16 @@ async function publishCall(argv) {
   if (hasLerna(argv.cwd)) {
     // https://github.com/lerna/lerna/issues/2404
     // Until lerna solves this issue we have to use yarn workspaces and npm publish
+    console.log('> detected lerna, use yarn workspaces publish');
     const result = spawnSync('yarn', ['-s', 'workspaces', 'info'], spawnOpts);
     const output = result.output.filter((e) => e && e.length > 0).toString();
-    console.log(`----------[INFO]---------output: ${output}`);
     const workspaces = JSON.parse(output);
     for (const key in workspaces) {
       const workspace = workspaces[key];
       tryPublish(path.join(argv.cwd, workspace.location));
     }
   } else {
+    console.log('> use npm publish');
     tryPublish(argv.cwd);
   }
 }
@@ -533,7 +535,7 @@ exports.ensureLerna = (argv) => {
   if (hasLerna(argv.cwd)) {
     const result = spawnSync('lerna', ['--version'], spawnOpts);
     if (result.status !== 0) {
-      exec('npm', ['install', '-g', 'lerna@4.0.0']);
+      exec('npm', ['install', '-g', 'lerna@^5.0.0']);
     }
   }
 };
