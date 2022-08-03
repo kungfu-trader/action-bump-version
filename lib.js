@@ -422,34 +422,8 @@ async function* traversalPackagesGraphQL(octokit) {
   //循环遍历获取所有package的graphQL方法
   let hasNextPage = false; //let是可变变量,是否有下一页，用以判断是否要继续循环
   const maxPerPage = 100; //const是常量，每页最大值，这里定义为100，默认为30
-  //let startCursor = ''; //因为后续这里肯定是string类型的，所以这里先给它初始化为“”，注意不能初始化为=null，有风险
-  const graphResponse = await octokit.graphql(`
-      query{
-        organization(login: "kungfu-trader") {
-          packages(first: ${maxPerPage}) {
-            totalCount
-            pageInfo {
-              hasNextPage
-              endCursor
-            }
-            nodes {
-              name
-              repository {
-                name
-              }
-              latestVersion {
-                version
-              }
-            }
-          }
-        }
-      }`);
-  let startCursor = graphResponse.organization.packages.pageInfo.endCursor;
-  hasNextPage = graphResponse.organization.packages.pageInfo.hasNextPage;
-  for (const graphPackage of graphResponse.organization.packages.nodes) {
-    yield graphPackage;
-  }
-  while (hasNextPage) {
+  let startCursor = ''; //因为后续这里肯定是string类型的，所以这里先给它初始化为“”，注意不能初始化为=null，有风险
+  do {
     const graphResponse = await octokit.graphql(`
       query{
         organization(login: "kungfu-trader") {
@@ -476,7 +450,7 @@ async function* traversalPackagesGraphQL(octokit) {
     }
     hasNextPage = graphResponse.organization.packages.pageInfo.hasNextPage;
     startCursor = graphResponse.organization.packages.pageInfo.endCursor;
-  }
+  } while (hasNextPage);
 }
 
 async function* traversalVersionsGraphQL(octokit, package_name, repository_name) {
@@ -484,31 +458,7 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
   let hasNextPage = false; //let是可变变量,是否有下一页，用以判断是否要继续循环
   const maxPerPage = 100; //const是常量，每页最大值，这里定义为100，默认为30
   //let startCursor = ''; //因为后续这里肯定是string类型的，所以这里先给它初始化为“”，注意不能初始化为=null，有风险
-  const graphResponse = await octokit.graphql(`
-      query{
-        repository(name: "action-bump-version", owner: "kungfu-trader") {
-          packages(names: "action-bump-version", last: 1) {
-            totalCount
-            nodes {
-              versions(first: ${maxPerPage}) {
-                nodes {
-                  version
-                }
-                pageInfo {
-                  endCursor
-                  hasNextPage
-                }
-              }
-            }
-          }
-        }
-      }`);
-  let startCursor = graphResponse.repository.packages.nodes[0].versions.pageInfo.endCursor;
-  hasNextPage = graphResponse.repository.packages.nodes[0].versions.pageInfo.hasNextPage;
-  for (const graphVersion of graphResponse.repository.packages.nodes[0].versions.nodes) {
-    yield graphVersion;
-  }
-  while (hasNextPage) {
+  do {
     const graphResponse = await octokit.graphql(`
       query{
         repository(name: "action-bump-version", owner: "kungfu-trader") {
@@ -535,7 +485,7 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
     }
     hasNextPage = graphResponse.repository.packages.nodes[0].versions.pageInfo.hasNextPage;
     startCursor = graphResponse.repository.packages.nodes[0].versions.pageInfo.endCursor;
-  }
+  } while (hasNextPage);
 }
 
 //实现了上述rest及graphQL查询方法后，下面构建调用函数完成整个查询，这里使用exports
@@ -562,6 +512,7 @@ exports.traversalMessage = async function (argv) {
       countNode++;
       //break; //这里加个break用于测试，这样只用遍历一次(这里只跳出了内层循环，每次获取有效package后都来一次获取action-bump-version的first:1，然后再push进数组)
     }
+    break; //测试action-bump-version的所有version能否正常遍历（这个目前包最多）
   }
   console.log(JSON.stringify(traversalResult)); //用于控制台输出最终结果
   console.log(traversalResult.length); //用于测试数组长度看看遍历能否进入下一页
