@@ -537,7 +537,7 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
     startCursor = graphResponse.repository.packages.nodes[0].versions.pageInfo.endCursor;
   }
 }
-//ceshibianhua
+
 //实现了上述rest及graphQL查询方法后，下面构建调用函数完成整个查询，这里使用exports
 //exports.traversalMessage = async function (octokit) {
 exports.traversalMessage = async function (argv) {
@@ -560,7 +560,7 @@ exports.traversalMessage = async function (argv) {
       };
       traversalResult.push(tempStoreResult);
       countNode++;
-      break; //这里加个break用于测试，这样只用遍历一次
+      //break; //这里加个break用于测试，这样只用遍历一次(这里只跳出了内层循环，每次获取有效package后都来一次获取action-bump-version的first:1，然后再push进数组)
     }
   }
   console.log(JSON.stringify(traversalResult)); //用于控制台输出最终结果
