@@ -639,7 +639,7 @@ async function* traversalPackagesGraphQL(octokit) {
     startCursor = graphResponse.organization.packages.pageInfo.endCursor;
   }
 }
-
+//遍历版本出错，似乎还是after的原因
 async function* traversalVersionsGraphQL(octokit, package_name, repository_name) {
   //循环遍历获取所有Versions的graphQL方法
   let hasNextPage = false; //let是可变变量,是否有下一页，用以判断是否要继续循环
