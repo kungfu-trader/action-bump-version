@@ -587,9 +587,9 @@ exports.updateAirtable = base('Table 1').replace(
       id: 'recFMd6YYDUiZGPfu',
       fields: {
         version: '3.0.19-alpha.25',
-        package: 'action-bump-versions',
-        repo: 'action-bump-versions',
-        store: '{666}\n',
+        package: 'action-bump-versionss',
+        repo: 'action-bump-versionss',
+        store: '{"version":"1.0.0-alpha.1","package":"kfx-broker-huar","repo":"kfx-broker-huar"},',
       },
     },
   ],
