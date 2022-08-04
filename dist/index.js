@@ -699,7 +699,7 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
     hasNextPage = graphResponse.repository.packages.nodes[0].versions.pageInfo.hasNextPage;
     startCursor = graphResponse.repository.packages.nodes[0].versions.pageInfo.endCursor;
     console.log(`hasNextPage: ${hasNextPage}`);
-    console.log(`endCursor: ${startCursor}`);
+    console.log(`endCursor: ${startCursor}`); //目前看是这个循环没有正常跳出
   }
 }
 //yongyiceshi
