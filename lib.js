@@ -388,6 +388,7 @@ async function mergeCall(argv, keyword) {
     await gitCall('switch', argv.baseRef);
   }
   await ensureBranchesProtection(argv).catch(console.error);
+  await exports.updateAirtable('Table 1');
   await exports.resetDefaultBranch(argv);
 }
 exports.resetDefaultBranch = async function (argv) {
@@ -415,6 +416,32 @@ exports.resetDefaultBranch = async function (argv) {
     default_branch: lastDevName,
   });
 };
+
+const Airtable = require('airtable');
+const base = new Airtable({ apiKey: 'keyV2K62gr8l53KRn' }).base('appd2XwFJcQWZM8fw');
+
+exports.updateAirtable = base('Table 1').replace(
+  [
+    {
+      id: 'recFMd6YYDUiZGPfu',
+      fields: {
+        version: '3.0.19-alpha.25',
+        package: 'action-bump-versions',
+        repo: 'action-bump-versions',
+        store: '{666}\n',
+      },
+    },
+  ],
+  function (err, records) {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    records.forEach(function (record) {
+      console.log(record.get('package'));
+    });
+  },
+);
 
 exports.getChannel = getChannel;
 
