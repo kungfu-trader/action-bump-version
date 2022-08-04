@@ -509,6 +509,8 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
     yield graphVersion;
   }
   while (hasNextPage) {
+    console.log(`startCursor: `);
+    console.log(`超过100: ${package_name}`);
     const graphResponse = await octokit.graphql(`
       query{
         repository(name: "${repository_name}", owner: "kungfu-trader") {
@@ -535,6 +537,8 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
     }
     hasNextPage = graphResponse.repository.packages.nodes[0].versions.pageInfo.hasNextPage;
     startCursor = graphResponse.repository.packages.nodes[0].versions.pageInfo.endCursor;
+    console.log(`hasNextPage: ${hasNextPage}`);
+    console.log(`endCursor: ${endCursor}`);
   }
 }
 //yongyiceshi
@@ -542,7 +546,7 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
 //exports.traversalMessage = async function (octokit) {
 exports.traversalMessage = async function (argv) {
   const octokit = github.getOctokit(argv.token);
-  let countVersion = 0; //该变量用于存储当前位置
+  //let countVersion = 0; //该变量用于存储当前位置
   let countPackage = 0; //store steps of for-loops
   let traversalResult = []; //该变量用于存储json信息
   for await (const graphPackage of traversalPackagesGraphQL(octokit)) {
@@ -560,12 +564,13 @@ exports.traversalMessage = async function (argv) {
         repo: repository_name,
       };
       traversalResult.push(tempStoreResult);
-      countVersion++;
-      console.log(`countVersion: ${countVersion}`);
+      //countVersion++;
+      //console.log(`countVersion: ${countVersion}`);
       //break; //这里加个break用于测试，这样只用遍历一次(这里只跳出了内层循环，每次获取有效package后都来一次获取action-bump-version的first:1，然后再push进数组)
     }
     //break; //测试action-bump-version的所有version能否正常遍历（这个目前包最多）
     countPackage++;
+    console.log(`当前package: ${package_name}`);
     console.log(`countPackage: ${countPackage}`);
   }
   console.log(JSON.stringify(traversalResult)); //用于控制台输出最终结果
