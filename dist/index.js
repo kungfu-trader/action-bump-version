@@ -698,11 +698,11 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
     }
     hasNextPage = graphResponse.repository.packages.nodes[0].versions.pageInfo.hasNextPage;
     startCursor = graphResponse.repository.packages.nodes[0].versions.pageInfo.endCursor;
-    console.log(`hasNextPage: ${hasNextPage}`);
+    console.log(`hasNextPage: ${hasNextPage}`); //after位置错了
     console.log(`endCursor: ${startCursor}`); //目前看是这个循环没有正常跳出
   }
 }
-//yongyiceshi
+
 //实现了上述rest及graphQL查询方法后，下面构建调用函数完成整个查询，这里使用exports
 //exports.traversalMessage = async function (octokit) {
 exports.traversalMessage = async function (argv) {
