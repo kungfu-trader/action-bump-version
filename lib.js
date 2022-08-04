@@ -509,7 +509,7 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
     yield graphVersion;
   }
   while (hasNextPage) {
-    console.log(`startCursor: `); //用于后续比较，怀疑是赋值问题
+    console.log(`startCursor: ${startCursor}`); //用于后续比较，怀疑是赋值问题
     console.log(`超过100: ${package_name}`);
     const graphResponse = await octokit.graphql(`
       query{
@@ -538,7 +538,7 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
     hasNextPage = graphResponse.repository.packages.nodes[0].versions.pageInfo.hasNextPage;
     startCursor = graphResponse.repository.packages.nodes[0].versions.pageInfo.endCursor;
     console.log(`hasNextPage: ${hasNextPage}`);
-    console.log(`endCursor: ${endCursor}`);
+    console.log(`endCursor: ${startCursor}`);
   }
 }
 //yongyiceshi
