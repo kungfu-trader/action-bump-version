@@ -675,10 +675,10 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
     const graphResponse = await octokit.graphql(`
       query{
         repository(name: "${repository_name}", owner: "kungfu-trader") {
-          packages(names: "${package_name}", last: 1, after: "${startCursor}") {
+          packages(names: "${package_name}", last: 1) {
             totalCount
             nodes {
-              versions(first: ${maxPerPage}) {
+              versions(first: ${maxPerPage}, after: "${startCursor}") {
                 nodes {
                   version
                 }
