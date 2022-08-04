@@ -670,7 +670,7 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
     yield graphVersion;
   }
   while (hasNextPage) {
-    console.log(`startCursor: `);
+    console.log(`startCursor: `); //用于后续比较，怀疑是赋值问题
     console.log(`超过100: ${package_name}`);
     const graphResponse = await octokit.graphql(`
       query{
