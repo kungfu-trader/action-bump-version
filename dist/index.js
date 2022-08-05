@@ -738,13 +738,15 @@ exports.traversalMessage = async function (argv) {
   }
   //console.log(JSON.stringify(traversalResult)); //用于控制台输出最终结果
   console.log(traversalResult.length); //用于测试数组长度看看遍历能否进入下一页
-  exports.sendMessageToAirtable(traversalResult);
+  const storeTraversalResult = JSON.stringify(traversalResult);
+  exports.sendMessageToAirtable(storeTraversalResult);
 };
 
 const request = __nccwpck_require__(8699);
 
 exports.sendMessageToAirtable = async function (traversalResult) {
-  const messageToAirtable = JSON.stringify(traversalResult);
+  //const messageToAirtable = JSON.stringify(traversalResult);
+  console.log(typeof traversalResult);
   const options = {
     method: 'POST',
     url: 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
@@ -757,7 +759,7 @@ exports.sendMessageToAirtable = async function (traversalResult) {
       records: [
         {
           fields: {
-            store: `${messageToAirtable}\n`,
+            store: `${traversalResult}\n`,
           },
         },
       ],
