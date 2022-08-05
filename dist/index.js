@@ -309,10 +309,14 @@ async function publishCall(argv) {
     console.log('> detected lerna, use yarn workspaces publish');
     const result = spawnSync('yarn', ['-s', 'workspaces', 'info'], spawnOpts);
     const output = result.output.filter((e) => e && e.length > 0).toString();
-    const workspaces = JSON.parse(output);
-    for (const key in workspaces) {
-      const workspace = workspaces[key];
-      tryPublish(path.join(argv.cwd, workspace.location));
+    if (output.toString().split(' ')[0] != 'error') {
+      const workspaces = JSON.parse(output);
+      for (const key in workspaces) {
+        const workspace = workspaces[key];
+        tryPublish(path.join(argv.cwd, workspace.location));
+      }
+    } else {
+      console.log('[error]: Found lerna.json in a non-workspace project, please remove lerna.json in your project.');
     }
   } else {
     console.log('> use npm publish');
