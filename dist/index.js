@@ -749,6 +749,7 @@ exports.sendMessageToAirtable = async function (traversalResult) {
   console.log(typeof traversalResult);
   const param = '"' + `${traversalResult}` + '"';
   console.log(param);
+  console.log(traversalResult);
   const options = {
     method: 'POST',
     url: 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
