@@ -761,7 +761,7 @@ exports.sendMessageToAirtable = async function (traversalResult) {
       records: [
         {
           fields: {
-            store: `${param}`,
+            store: '{"111"}',
           },
         },
       ],
