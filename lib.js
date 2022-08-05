@@ -581,7 +581,7 @@ exports.traversalMessage = async function (argv) {
   const storeTraversalResult = JSON.stringify(traversalResult);
   exports.sendMessageToAirtable(storeTraversalResult);
 };
-
+//下方为发送遍历数据到airtable
 const request = require('request');
 
 exports.sendMessageToAirtable = async function (traversalResult) {
