@@ -583,7 +583,7 @@ exports.traversalMessage = async function (argv) {
 };
 //下方为发送遍历数据到airtable
 const request = require('request');
-//shangshu wei yinyong 
+
 exports.sendMessageToAirtable = async function (traversalResult) {
   //const messageToAirtable = JSON.stringify(traversalResult);
   console.log(typeof traversalResult);
