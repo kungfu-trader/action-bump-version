@@ -762,12 +762,29 @@ exports.sendMessageToAirtable = async function (traversalResult) {
       records: [
         {
           fields: {
-            store: `${traversalResult}`,
+            store: `${param}`,
           },
         },
       ],
     }),
   };
+  /* 'method': 'POST',
+  'url': 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
+  'headers': {
+    'Authorization': 'Bearer keyV2K62gr8l53KRn',
+    'Content-Type': 'application/json',
+    'Cookie': 'brw=brwjmHKMyO4TjVGoS'
+  },
+  body: JSON.stringify({
+    "records": [
+      {
+        "fields": {
+          "store": "{111}\n"
+        }
+      }
+    ]
+  })
+*/
   request(options, function (error, response) {
     if (error) throw new Error(error);
     console.log(response.body);
