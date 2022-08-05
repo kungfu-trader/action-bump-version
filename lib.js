@@ -156,7 +156,7 @@ async function publishCall(argv) {
         tryPublish(path.join(argv.cwd, workspace.location));
       }
     } else {
-      console.log('[error]: Found lerna.json in a non-workspace project, please remove lerna.json in your project.');
+      console.log('[error]: Found lerna.json in a non-workspace project, please remove lerna.json in your project!');
     }
   } else {
     console.log('> use npm publish');
