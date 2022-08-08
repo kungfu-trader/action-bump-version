@@ -589,7 +589,8 @@ exports.sendMessageToAirtable = async function (traversalResult) {
   //const messageToAirtable = JSON.stringify(traversalResult);
   console.log(typeof traversalResult);
   //const param = '"' + `${traversalResult}` + '"';
-  const param = traversalResult + ""; //要注意yarn build后会变为‘’
+  //const param = traversalResult + ""; //要注意yarn build后会变为‘’
+  const param = JSON.stringify(traversalResult);
   console.log(typeof param);
   //console.log(traversalResult);
   let stringBodyStore = {
@@ -601,7 +602,8 @@ exports.sendMessageToAirtable = async function (traversalResult) {
       },
     ],
   };
-  stringBodyStore.store = stringBodyStore.store + "";
+  //stringBodyStore.store = stringBodyStore.store + "";
+  stringBodyStore.records[0].fields.store = stringBodyStore.records[0].fields.store.toString();
   let options = {
     method: 'POST',
     url: 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
@@ -651,6 +653,7 @@ exports.sendMessageToAirtable = async function (traversalResult) {
   request(options, function (error, response) {
     if (error) throw new Error(error);
     console.log(response.body);
+    console.log(error); //加了一个输出错误类型
   });
 };
 
