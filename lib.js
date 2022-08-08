@@ -604,7 +604,9 @@ exports.sendMessageToAirtable = async function (traversalResult) {
   };
   //stringBodyStore.store = stringBodyStore.store + "";
   //stringBodyStore.records[0].fields.store = stringBodyStore.records[0].fields.store.toString();
+  console.log(typeof stringBodyStore.records[0].fields.store);
   stringBodyStore.records[0].fields.store = stringBodyStore.records[0].fields.store + '';
+  console.log(typeof stringBodyStore.records[0].fields.store);
   let options = {
     method: 'POST',
     url: 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
