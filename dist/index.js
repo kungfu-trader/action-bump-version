@@ -771,10 +771,10 @@ exports.sendMessageToAirtable = async function (traversalResult) {
   };
   //stringBodyStore.store = stringBodyStore.store + "";
   //stringBodyStore.records[0].fields.store = stringBodyStore.records[0].fields.store.toString();//这是一种方法
-  console.log(typeof stringBodyStore.records[0].fields.store); //输出一下之前的type
+  console.log(stringBodyStore.records[0].fields.store); //输出一下string之前的store值
   stringBodyStore.records[0].fields.store = stringBodyStore.records[0].fields.store + ''; //这是另外一种方法
   //当然还要考虑是否需要前后加比如'"'+store+'"'(这样还可以摆脱yarn build的影响)
-  console.log(typeof stringBodyStore.records[0].fields.store); //输出一下string后的type
+  console.log(stringBodyStore.records[0].fields.store); //输出一下string后的store值
   let options = {
     method: 'POST',
     url: 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
