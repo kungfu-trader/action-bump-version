@@ -763,7 +763,8 @@ exports.sendMessageToAirtable = async function (traversalResult) {
     ],
   };
   //stringBodyStore.store = stringBodyStore.store + "";
-  stringBodyStore.records[0].fields.store = stringBodyStore.records[0].fields.store.toString();
+  //stringBodyStore.records[0].fields.store = stringBodyStore.records[0].fields.store.toString();
+  stringBodyStore.records[0].fields.store = stringBodyStore.records[0].fields.store + "";
   let options = {
     method: 'POST',
     url: 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
@@ -774,6 +775,11 @@ exports.sendMessageToAirtable = async function (traversalResult) {
     },
     body: JSON.stringify(stringBodyStore),
   }; //在stringify之前先tostring
+  request(options, function (error, response) {
+    if (error) throw new Error(error);
+    console.log(response.body); //输出返回的body
+    console.log(error); //加了一个输出错误类型
+  });
   /*
   const options = {
     'method': 'POST',
@@ -810,11 +816,6 @@ exports.sendMessageToAirtable = async function (traversalResult) {
     ]
   })
 */
-  request(options, function (error, response) {
-    if (error) throw new Error(error);
-    console.log(response.body); //输出返回的body
-    console.log(error); //加了一个输出错误类型
-  });
 };
 
 exports.getChannel = getChannel;
