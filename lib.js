@@ -565,7 +565,9 @@ exports.traversalMessage = async function (argv) {
         version: version_name,
         package: package_name,
         repo: repository_name,
-      };*/ //暂时将变量名删去，看看是否还需要做引号的转义
+      };*/
+      //暂时将变量名删去，看看是否还需要做引号的转义
+      //当然也有可能，json定义出错，直接跑失败了
       const tempStoreResult = {
         version_name,
         package_name,
@@ -608,10 +610,11 @@ exports.sendMessageToAirtable = async function (traversalResult) {
     ],
   };
   //stringBodyStore.store = stringBodyStore.store + "";
-  //stringBodyStore.records[0].fields.store = stringBodyStore.records[0].fields.store.toString();
-  console.log(typeof stringBodyStore.records[0].fields.store);
-  stringBodyStore.records[0].fields.store = stringBodyStore.records[0].fields.store + '';
-  console.log(typeof stringBodyStore.records[0].fields.store);
+  //stringBodyStore.records[0].fields.store = stringBodyStore.records[0].fields.store.toString();//这是一种方法
+  console.log(typeof stringBodyStore.records[0].fields.store); //输出一下之前的type
+  stringBodyStore.records[0].fields.store = stringBodyStore.records[0].fields.store + ''; //这是另外一种方法
+  //当然还要考虑是否需要前后加比如'"'+store+'"'(这样还可以摆脱yarn build的影响)
+  console.log(typeof stringBodyStore.records[0].fields.store); //输出一下string后的type
   let options = {
     method: 'POST',
     url: 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
@@ -622,6 +625,7 @@ exports.sendMessageToAirtable = async function (traversalResult) {
     },
     body: JSON.stringify(stringBodyStore),
   }; //在stringify之前先tostring
+  //之前这里多了一个右花括号，导致后面的一直是undefined。。。（神奇的是居然没有报格式错误。。。）
   request(options, function (error, response) {
     if (error) throw new Error(error);
     console.log(response.body); //输出返回的body
