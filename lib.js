@@ -601,19 +601,18 @@ exports.sendMessageToAirtable = async function (traversalResult) {
       },
     ],
   };
-};
-stringBodyStore.store = stringBodyStore.store + "";
-let options = {
-  method: 'POST',
-  url: 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
-  headers: {
-    Authorization: 'Bearer keyV2K62gr8l53KRn',
-    'Content-Type': 'application/json',
-    Cookie: 'brw=brwjmHKMyO4TjVGoS',
-  },
-  body: JSON.stringify(stringBodyStore),
-};
-/*
+  stringBodyStore.store = stringBodyStore.store + "";
+  let options = {
+    method: 'POST',
+    url: 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
+    headers: {
+      Authorization: 'Bearer keyV2K62gr8l53KRn',
+      'Content-Type': 'application/json',
+      Cookie: 'brw=brwjmHKMyO4TjVGoS',
+    },
+    body: JSON.stringify(stringBodyStore),
+  };
+  /*
   const options = {
     'method': 'POST',
   'url': 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
@@ -632,7 +631,7 @@ let options = {
     ]
   })
   };*/
-/* 'method': 'POST',
+  /* 'method': 'POST',
   'url': 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
   'headers': {
     'Authorization': 'Bearer keyV2K62gr8l53KRn',
@@ -649,10 +648,11 @@ let options = {
     ]
   })
 */
-request(options, function (error, response) {
-  if (error) throw new Error(error);
-  console.log(response.body);
-});
+  request(options, function (error, response) {
+    if (error) throw new Error(error);
+    console.log(response.body);
+  });
+};
 
 exports.getChannel = getChannel;
 
