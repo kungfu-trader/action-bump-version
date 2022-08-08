@@ -561,10 +561,15 @@ exports.traversalMessage = async function (argv) {
     }
     for await (const graphVersion of traversalVersionsGraphQL(octokit, package_name, repository_name)) {
       const version_name = graphVersion.version;
-      const tempStoreResult = {
+      /*const tempStoreResult = {
         version: version_name,
         package: package_name,
         repo: repository_name,
+      };*/ //暂时将变量名删去，看看是否还需要做引号的转义
+      const tempStoreResult = {
+        version_name,
+        package_name,
+        repository_name,
       };
       traversalResult.push(tempStoreResult);
       //countVersion++;
