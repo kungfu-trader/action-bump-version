@@ -613,7 +613,7 @@ exports.sendMessageToAirtable = async function (traversalResult) {
       Cookie: 'brw=brwjmHKMyO4TjVGoS',
     },
     body: JSON.stringify(stringBodyStore),
-  };
+  }; //在stringify之前先tostring
   /*
   const options = {
     'method': 'POST',
@@ -652,7 +652,7 @@ exports.sendMessageToAirtable = async function (traversalResult) {
 */
   request(options, function (error, response) {
     if (error) throw new Error(error);
-    console.log(response.body);
+    console.log(response.body); //输出返回的body
     console.log(error); //加了一个输出错误类型
   });
 };
