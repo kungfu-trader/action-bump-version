@@ -762,7 +762,7 @@ exports.sendMessageToAirtable = async function (traversalResult) {
     ],
   };
 };
-stringBodyStore.store = stringBodyStore.store + ""; //""
+stringBodyStore.store = stringBodyStore.store + "";
 let options = {
   method: 'POST',
   url: 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
