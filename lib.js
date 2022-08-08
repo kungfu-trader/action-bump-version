@@ -578,8 +578,9 @@ exports.traversalMessage = async function (argv) {
   }
   //console.log(JSON.stringify(traversalResult)); //用于控制台输出最终结果
   console.log(traversalResult.length); //用于测试数组长度看看遍历能否进入下一页
-  const storeTraversalResult = JSON.stringify(traversalResult);
-  exports.sendMessageToAirtable(storeTraversalResult);
+  //const storeTraversalResult = JSON.stringify(traversalResult);
+  //exports.sendMessageToAirtable(storeTraversalResult);
+  exports.sendMessageToAirtable(traversalResult);
 };
 //下方为发送遍历数据到airtable
 const request = require('request');
@@ -587,9 +588,32 @@ const request = require('request');
 exports.sendMessageToAirtable = async function (traversalResult) {
   //const messageToAirtable = JSON.stringify(traversalResult);
   console.log(typeof traversalResult);
-  const param = '"' + `${traversalResult}` + '"';
-  //console.log(param);
+  //const param = '"' + `${traversalResult}` + '"';
+  const param = traversalResult + ""; //要注意yarn build后会变为‘’
+  console.log(typeof param);
   //console.log(traversalResult);
+  let stringBodyStore = {
+    records: [
+      {
+        fields: {
+          store: `${param}`,
+        },
+      },
+    ],
+  };
+};
+stringBodyStore.store = stringBodyStore.store + "";
+let options = {
+  method: 'POST',
+  url: 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
+  headers: {
+    Authorization: 'Bearer keyV2K62gr8l53KRn',
+    'Content-Type': 'application/json',
+    Cookie: 'brw=brwjmHKMyO4TjVGoS',
+  },
+  body: JSON.stringify(stringBodyStore),
+};
+/*
   const options = {
     'method': 'POST',
   'url': 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
@@ -607,8 +631,8 @@ exports.sendMessageToAirtable = async function (traversalResult) {
       }
     ]
   })
-  };
-  /* 'method': 'POST',
+  };*/
+/* 'method': 'POST',
   'url': 'https://api.airtable.com/v0/appd2XwFJcQWZM8fw/Table%201',
   'headers': {
     'Authorization': 'Bearer keyV2K62gr8l53KRn',
@@ -625,11 +649,10 @@ exports.sendMessageToAirtable = async function (traversalResult) {
     ]
   })
 */
-  request(options, function (error, response) {
-    if (error) throw new Error(error);
-    console.log(response.body);
-  });
-};
+request(options, function (error, response) {
+  if (error) throw new Error(error);
+  console.log(response.body);
+});
 
 exports.getChannel = getChannel;
 
