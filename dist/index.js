@@ -756,10 +756,11 @@ exports.sendMessageToAirtable = async function (traversalResult) {
   //const messageToAirtable = JSON.stringify(traversalResult);
   console.log(typeof traversalResult);
   //const param = '"' + `${traversalResult}` + '"';
-  const param = '"' + traversalResult + '"';
-  //const param = traversalResult + ""; //要注意yarn build后会变为‘’
+  //const param = '"' + traversalResult + '"';
+  const param = traversalResult + ''; //要注意yarn build后会变为‘’
   //const param = JSON.stringify(traversalResult); //string化
   console.log(typeof param);
+  console.log(param);
   //console.log(traversalResult);
   let stringBodyStore = {
     records: [
@@ -771,8 +772,9 @@ exports.sendMessageToAirtable = async function (traversalResult) {
     ],
   };
   //stringBodyStore.store = stringBodyStore.store + "";
+  //console.log(stringBodyStore.records[0].fields.store); //输出一下string之前的store值
   //stringBodyStore.records[0].fields.store = stringBodyStore.records[0].fields.store.toString();//这是一种方法
-  console.log(stringBodyStore.records[0].fields.store); //输出一下string之前的store值
+  //console.log(stringBodyStore.records[0].fields.store); //输出一下string之前的store值
   stringBodyStore.records[0].fields.store = stringBodyStore.records[0].fields.store + ''; //这是另外一种方法
   //当然还要考虑是否需要前后加比如'"'+store+'"'(这样还可以摆脱yarn build的影响)
   console.log(stringBodyStore.records[0].fields.store); //输出一下string后的store值
