@@ -597,8 +597,8 @@ exports.sendMessageToAirtable = async function (traversalResult) {
   console.log(typeof traversalResult);
   //const param = '"' + `${traversalResult}` + '"';
   //const param = '"' + traversalResult + '"';
-  const param = traversalResult + ''; //要注意yarn build后会变为‘’
-  //const param = JSON.stringify(traversalResult); //string化
+  //const param = traversalResult + ''; //要注意yarn build后会变为‘’
+  const param = JSON.stringify(traversalResult); //string化
   console.log(typeof param);
   console.log(param);
   //console.log(traversalResult);
