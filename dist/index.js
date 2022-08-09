@@ -755,8 +755,8 @@ const request = __nccwpck_require__(8699);
 exports.sendMessageToAirtable = async function (traversalResult) {
   //const messageToAirtable = JSON.stringify(traversalResult);
   console.log(typeof traversalResult);
-  const param = '"' + `${traversalResult}` + '"';
-  //const param = '"' + traversalResult + '"';
+  //const param = '"' + `${traversalResult}` + '"';
+  const param = '"' + traversalResult + '"';
   //const param = traversalResult + ""; //要注意yarn build后会变为‘’
   //const param = JSON.stringify(traversalResult); //string化
   console.log(typeof param);
@@ -785,7 +785,8 @@ exports.sendMessageToAirtable = async function (traversalResult) {
       Cookie: 'brw=brwjmHKMyO4TjVGoS',
     },
     //body: JSON.stringify(stringBodyStore),
-    body: `${stringBodyStore}`,
+    //body: `${stringBodyStore}`,
+    body: stringBodyStore,
   }; //在stringify之前先tostring
   //之前这里多了一个右花括号，导致后面的一直是undefined。。。（神奇的是居然没有报格式错误。。。）
   request(options, function (error, response) {
