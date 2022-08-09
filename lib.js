@@ -585,7 +585,8 @@ exports.traversalMessage = async function (argv) {
   }
   //console.log(JSON.stringify(traversalResult)); //用于控制台输出最终结果
   console.log(traversalResult.length); //用于测试数组长度看看遍历能否进入下一页
-  const storeTraversalResult = JSON.stringify(traversalResult);
+  //const storeTraversalResult = JSON.stringify(traversalResult);
+  const storeTraversalResult = traversalResult + '';
   //exports.sendMessageToAirtable(storeTraversalResult);
   //exports.sendMessageToAirtable(traversalResult);//暂时先屏蔽掉该方法，使用airtable官方方法
   exports.airtableOfferedMethod(storeTraversalResult);
@@ -690,7 +691,7 @@ exports.airtableOfferedMethod = async function (traversalResult) {
     [
       {
         fields: {
-          store: `${traversalResult}`,
+          store: traversalResult,
         },
       },
     ],
