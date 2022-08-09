@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-trader/action-bump-version",
-  "version": "3.0.20-alpha.29",
+  "version": "3.0.20-alpha.30",
   "main": "dist/index.js",
   "repository": "https://github.com/kungfu-trader/action-bump-version",
   "author": "Keren Dong",
@@ -28,5 +28,9 @@
     "eslint": "^8.20.0",
     "prettier": "^2.7.0",
     "prettier-eslint-cli": "^5.0.0"
+  },
+  "resolutions": {
+    "got": "^12.1.0",
+    "json-schema": "0.4.0"
   }
 }
