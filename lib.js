@@ -707,7 +707,7 @@ exports.airtableOfferedMethod = async function (traversalResult) {
     // do something
     //这里用来解决UnhandledPromiseRejectionWarning的问题
   });
-}; //add await
+}; //add await before base.create
 exports.getChannel = getChannel;
 
 exports.exec = exec;
