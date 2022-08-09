@@ -683,7 +683,7 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   exec('npm', ['install', '-g', 'airtable']); //使用exec调用npm指令安装airtable，这样require时不会出错
   const Airtable = require('airtable'); //引入airtable
   const base = new Airtable({ apiKey: 'keyV2K62gr8l53KRn' }).base('appd2XwFJcQWZM8fw'); //声明一些必要的信息
-  base('Table 1').create(
+  await base('Table 1').create(
     [
       {
         fields: {
