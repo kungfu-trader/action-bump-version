@@ -862,6 +862,11 @@ exports.airtableOfferedMethod = async function (traversalResult) {
       });
     },
   );
+  process.on('unhandledRejection', (reason, p) => {
+    console.log('Promise: ', p, 'Reason: ', reason);
+    // do something
+    //这里用来解决UnhandledPromiseRejectionWarning的问题
+  });
 }; //add await
 exports.getChannel = getChannel;
 
