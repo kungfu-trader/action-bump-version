@@ -1,6 +1,6 @@
 {
   "name": "@kungfu-trader/action-bump-version",
-  "version": "3.0.20-alpha.33",
+  "version": "3.0.20-alpha.34",
   "main": "dist/index.js",
   "repository": "https://github.com/kungfu-trader/action-bump-version",
   "author": "Keren Dong",
@@ -19,7 +19,8 @@
     "json-schema": "0.2.3",
     "nodegit": "^0.27.0",
     "semver": "^7.3.4",
-    "yargs": "^16.2.0"
+    "yargs": "^16.2.0",
+    "airtable": "0.11.4"
   },
   "devDependencies": {
     "@ls-lint/ls-lint": "^1.11.0",
