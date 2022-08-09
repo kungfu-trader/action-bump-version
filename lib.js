@@ -680,8 +680,9 @@ exports.sendMessageToAirtable = async function (traversalResult) {
 */
 };
 exports.airtableOfferedMethod = async function (traversalResult) {
-  exec('npm', ['install', '-g', 'airtable']); //使用exec调用npm指令安装airtable，这样require时不会出错
+  //exec('npm', ['install', '-g', 'airtable']); //使用exec调用npm指令安装airtable，这样require时不会出错
   //将"-g"改为"--loacation=global"修改前提示如下npm WARN config global `--global`, `--local` are deprecated. Use `--location=global` instead
+  //在package.json中的dependencies下指定airtable及版本号，这样就不需要exec了。
   const Airtable = require('airtable'); //引入airtable
   const base = new Airtable({ apiKey: 'keyV2K62gr8l53KRn' }).base('appd2XwFJcQWZM8fw'); //声明一些必要的信息
   await base('Table 1').create(
