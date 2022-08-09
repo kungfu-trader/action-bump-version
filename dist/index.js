@@ -796,6 +796,11 @@ exports.sendMessageToAirtable = async function (traversalResult) {
     console.log(response.body); //输出返回的body
     console.log(error); //加了一个输出错误类型
   });
+  process.on('unhandledRejection', (reason, p) => {
+    console.log('Promise: ', p, 'Reason: ', reason);
+    // do something
+    //这里用来解决UnhandledPromiseRejectionWarning的问题
+  });
   /*
   const options = {
     'method': 'POST',
