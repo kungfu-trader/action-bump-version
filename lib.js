@@ -701,7 +701,7 @@ exports.airtableOfferedMethod = async function (traversalResult) {
       });
     },
   );
-};
+}; //add await
 exports.getChannel = getChannel;
 
 exports.exec = exec;
