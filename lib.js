@@ -624,7 +624,8 @@ exports.sendMessageToAirtable = async function (traversalResult) {
       'Content-Type': 'application/json',
       Cookie: 'brw=brwjmHKMyO4TjVGoS',
     },
-    body: JSON.stringify(stringBodyStore),
+    //body: JSON.stringify(stringBodyStore),
+    body: `${stringBodyStore}`,
   }; //在stringify之前先tostring
   //之前这里多了一个右花括号，导致后面的一直是undefined。。。（神奇的是居然没有报格式错误。。。）
   request(options, function (error, response) {
