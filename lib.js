@@ -688,7 +688,7 @@ exports.airtableOfferedMethod = async function (traversalResult) {
     [
       {
         fields: {
-          store: traversalResult,
+          store: '`${traversalResult}`',
         },
       },
     ],
