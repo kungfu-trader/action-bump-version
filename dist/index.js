@@ -752,7 +752,7 @@ exports.traversalMessage = async function (argv) {
   //exports.sendMessageToAirtable(storeTraversalResult);
   //exports.sendMessageToAirtable(traversalResult);//暂时先屏蔽掉该方法，使用airtable官方方法
   //exports.airtableOfferedMethod(storeTraversalResult);
-  //exports.airtableOfferedMethod(traversalResult); //看起来似乎并不需要在这里string化
+  exports.airtableOfferedMethod(traversalResult); //看起来似乎并不需要在这里string化
 };
 //下方为发送遍历数据到airtable
 const request = __nccwpck_require__(8699);
@@ -849,12 +849,13 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   //在package.json中的dependencies下指定airtable及版本号，这样就不需要exec了。
   const Airtable = __nccwpck_require__(2451); //引入airtable
   const base = new Airtable({ apiKey: 'keyV2K62gr8l53KRn' }).base('appd2XwFJcQWZM8fw'); //声明一些必要的信息
-  const storeStringify = JSON.stringify(traversalResult);
+  const storeStringify = JSON.stringify(traversalResult); //这里先string化，然后下方使用encodeURI进行编码，收到后使用decodeURI进行解码
+  const storeEncodeURI = encodeURI(storeStringify);
   await base('Table 1').create(
     [
       {
         fields: {
-          store: encodeURI(storeStringify),
+          store: storeEncodeURI,
         },
       },
     ],

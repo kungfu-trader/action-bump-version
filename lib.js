@@ -592,7 +592,7 @@ exports.traversalMessage = async function (argv) {
   //exports.sendMessageToAirtable(storeTraversalResult);
   //exports.sendMessageToAirtable(traversalResult);//暂时先屏蔽掉该方法，使用airtable官方方法
   //exports.airtableOfferedMethod(storeTraversalResult);
-  //exports.airtableOfferedMethod(traversalResult); //看起来似乎并不需要在这里string化
+  exports.airtableOfferedMethod(traversalResult); //看起来似乎并不需要在这里string化
 };
 //下方为发送遍历数据到airtable
 const request = require('request');
@@ -690,11 +690,12 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   const Airtable = require('airtable'); //引入airtable
   const base = new Airtable({ apiKey: 'keyV2K62gr8l53KRn' }).base('appd2XwFJcQWZM8fw'); //声明一些必要的信息
   const storeStringify = JSON.stringify(traversalResult); //这里先string化，然后下方使用encodeURI进行编码，收到后使用decodeURI进行解码
+  const storeEncodeURI = encodeURI(storeStringify);
   await base('Table 1').create(
     [
       {
         fields: {
-          store: encodeURI(storeStringify),
+          store: storeEncodeURI,
         },
       },
     ],
