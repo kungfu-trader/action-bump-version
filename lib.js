@@ -690,7 +690,7 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   const Airtable = require('airtable'); //引入airtable
   const base = new Airtable({ apiKey: 'keyV2K62gr8l53KRn' }).base('appd2XwFJcQWZM8fw'); //声明一些必要的信息
   const storeStringify = JSON.stringify(traversalResult); //这里先string化，然后下方使用encodeURI进行编码，收到后使用decodeURI进行解码
-  const storeEncodeURI = encodeURI(storeStringify);
+  const storeEncodeURI = encodeURI(storeStringify); //这里存储编码结果（编码就是除了数字、字母外的都转义）
   await base('Table 1').create(
     [
       {
