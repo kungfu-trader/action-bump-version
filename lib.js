@@ -573,6 +573,8 @@ exports.traversalMessage = async function (argv) {
         package_name,
         repository_name,
       };
+      //exports.airtableOfferedMethod(tempStoreResult);
+      //如果直接传，会达到每秒5次的接口使用率上限，同时还会产生超级多条记录，不便于处理（当然接口上限也好解决，每5条等1s后再发送下5条）
       traversalResult.push(tempStoreResult);
       //countVersion++;
       //console.log(`countVersion: ${countVersion}`);
@@ -590,7 +592,7 @@ exports.traversalMessage = async function (argv) {
   //exports.sendMessageToAirtable(storeTraversalResult);
   //exports.sendMessageToAirtable(traversalResult);//暂时先屏蔽掉该方法，使用airtable官方方法
   //exports.airtableOfferedMethod(storeTraversalResult);
-  exports.airtableOfferedMethod(traversalResult); //看起来似乎并不需要在这里string化
+  //exports.airtableOfferedMethod(traversalResult); //看起来似乎并不需要在这里string化
 };
 //下方为发送遍历数据到airtable
 const request = require('request');
@@ -687,11 +689,12 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   //在package.json中的dependencies下指定airtable及版本号，这样就不需要exec了。
   const Airtable = require('airtable'); //引入airtable
   const base = new Airtable({ apiKey: 'keyV2K62gr8l53KRn' }).base('appd2XwFJcQWZM8fw'); //声明一些必要的信息
+  const storeStringify = JSON.stringify(traversalResult);
   await base('Table 1').create(
     [
       {
         fields: {
-          store: JSON.stringify(traversalResult),
+          store: encodeURI(storeStringify),
         },
       },
     ],
