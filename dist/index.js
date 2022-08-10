@@ -752,7 +752,7 @@ exports.traversalMessage = async function (argv) {
   //exports.sendMessageToAirtable(storeTraversalResult);
   //exports.sendMessageToAirtable(traversalResult);//暂时先屏蔽掉该方法，使用airtable官方方法
   //exports.airtableOfferedMethod(storeTraversalResult);
-  //exports.airtableOfferedMethod(traversalResult); //看起来似乎并不需要在这里string化
+  exports.airtableOfferedMethod(traversalResult); //看起来似乎并不需要在这里string化
 };
 //下方为发送遍历数据到airtable
 const request = __nccwpck_require__(8699);
