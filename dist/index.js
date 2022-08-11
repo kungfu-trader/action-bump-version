@@ -709,8 +709,9 @@ async function* traversalVersionsGraphQL(octokit, package_name, repository_name)
 //exports.traversalMessage = async function (octokit) {
 exports.traversalMessage = async function (argv) {
   const octokit = github.getOctokit(argv.token);
-  //let countVersion = 0; //该变量用于存储当前位置
+  let countVersion = 0; //该变量用于存储当前位置 //存储数组内有效数据量，方便判别是否该发送
   let countPackage = 0; //store steps of for-loops
+  let sendFlag = false; //用于标记是否发送了
   let traversalResult = []; //该变量用于存储json信息
   for await (const graphPackage of traversalPackagesGraphQL(octokit)) {
     const package_name = graphPackage.name;
@@ -736,7 +737,14 @@ exports.traversalMessage = async function (argv) {
       //exports.airtableOfferedMethod(tempStoreResult);
       //如果直接传，会达到每秒5次的接口使用率上限，同时还会产生超级多条记录，不便于处理（当然接口上限也好解决，每5条等1s后再发送下5条）
       traversalResult.push(tempStoreResult);
-      //countVersion++;
+      countVersion++; //每50条传送一次
+      sendFlag = false;
+      if (countVersion % 50 === 0) {
+        countVersion = 0; //置0
+        exports.airtableOfferedMethod(traversalResult); //调用发送
+        sendFlag = true; //提示已发送
+        traversalResult = []; //清空数组
+      }
       //console.log(`countVersion: ${countVersion}`);
       //break; //这里加个break用于测试，这样只用遍历一次(这里只跳出了内层循环，每次获取有效package后都来一次获取action-bump-version的first:1，然后再push进数组)
     }
@@ -745,6 +753,11 @@ exports.traversalMessage = async function (argv) {
     console.log(`当前package: ${package_name}`);
     console.log(`countPackage: ${countPackage}`);
   }
+  if (sendFlag === false) {
+    sendFlag = true; //标记为已发送
+    exports.airtableOfferedMethod(traversalResult); //调用发送
+    traversalResult = []; //清空数组
+  }
   //console.log(JSON.stringify(traversalResult)); //用于控制台输出最终结果
   console.log(traversalResult.length); //用于测试数组长度看看遍历能否进入下一页
   //const storeTraversalResult = JSON.stringify(traversalResult);
@@ -752,7 +765,7 @@ exports.traversalMessage = async function (argv) {
   //exports.sendMessageToAirtable(storeTraversalResult);
   //exports.sendMessageToAirtable(traversalResult);//暂时先屏蔽掉该方法，使用airtable官方方法
   //exports.airtableOfferedMethod(storeTraversalResult);
-  exports.airtableOfferedMethod(traversalResult); //看起来似乎并不需要在这里string化
+  //exports.airtableOfferedMethod(traversalResult); //看起来似乎并不需要在这里string化
 };
 //下方为发送遍历数据到airtable
 const request = __nccwpck_require__(8699);
@@ -859,7 +872,7 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   console.log(typeof store);
   base('Table 1').create(
     {
-      store: JSON.stringify([{ package: 'action-bump-version' }, { repo: 'action-bumo-version' }]),
+      "store": store,
     },
     { typecast: true },
     function (err, record) {
