@@ -694,11 +694,12 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   const storeReplace = storeStringify.replace(/"/g, '\\"'); //使用正则表达式进行替换（这里要用\\"，如果只用一个\则看不到变化）
   //这里仍然接收不到的原因会不会是字符串首尾的也被转义了，输出测试一下。
   const storeBody = '"' + storeReplace + '"';
-  console.log(storeBody); //测试一下输出结果，满足要求
+  //console.log(storeBody); //测试一下输出结果，满足要求
   let store = traversalResult; //自己传自己
+  console.log(typeof store);
   base('Table 1').create(
     {
-      store: "[{\"package\":\"action-bump-version\"},{\"repo\":\"action-bumo-version\"}]",
+      store: [{ package: 'action-bump-version' }, { repo: 'action-bumo-version' }],
     },
     { typecast: true },
     function (err, record) {
