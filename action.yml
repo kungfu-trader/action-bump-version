@@ -11,6 +11,9 @@ inputs:
   no-publish:
     description: "Choices [true/false]"
     default: "false"
+  no-protection:
+    description: "Choices [true/false]"
+    default: "false"
 runs:
   using: "node12"
   main: "dist/index.js"

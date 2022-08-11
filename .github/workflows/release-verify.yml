@@ -1,10 +1,10 @@
-name: Release - Verify Version
+name: Release - Verify
 on:
   pull_request:
-    types: [opened]
+    types: [opened, reopened, synchronize]
     branches:
-      - alpha/v*/v*
-      - release/v*/v*
+      - alpha/*/*
+      - release/*/*
       - main
 
 jobs:
@@ -14,8 +14,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Verify
-        uses: kungfu-trader/action-bump-version@v2
+      - name: Verify Version
+        uses: kungfu-trader/action-bump-version@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           action: "verify"
