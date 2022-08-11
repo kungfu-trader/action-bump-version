@@ -756,7 +756,7 @@ exports.traversalMessage = async function (argv) {
 };
 //下方为发送遍历数据到airtable
 const request = __nccwpck_require__(8699);
-
+//这里引入request
 exports.sendMessageToAirtable = async function (traversalResult) {
   //const messageToAirtable = JSON.stringify(traversalResult);
   console.log(typeof traversalResult);
@@ -852,11 +852,12 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   const storeStringify = JSON.stringify(traversalResult); //这里先string化，然后下方使用encodeURI进行编码，收到后使用decodeURI进行解码
   //const storeEncodeURI = encodeURI(storeStringify); //这里存储编码结果（编码就是除了数字、字母外的都转义）
   const storeReplace = storeStringify.replace(/"/g, '\\"'); //使用正则表达式进行替换（这里要用\\"，如果只用一个\则看不到变化）
+  console.log(storeReplace);
   base('Table 1').create(
     [
       {
         fields: {
-          store: storeReplace,
+          store: `${storeReplace}`,
         },
       },
     ],
