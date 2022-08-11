@@ -711,6 +711,7 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   //console.log(storeBody); //测试一下输出结果，满足要求
   let store = storeBody; //自己传自己
   console.log(typeof store);
+  //store": store,
   base('Table 1').create(
     {
       "store": store,
