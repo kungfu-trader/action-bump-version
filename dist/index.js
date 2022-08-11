@@ -857,7 +857,7 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   console.log(storeBody); //测试一下输出结果
   base('Table 1').create(
     {
-      store: storeBody,
+      "store": storeBody,
     },
     function (err, record) {
       if (err) {
