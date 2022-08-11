@@ -43,7 +43,7 @@ const teardown = (exports.teardown = async function (argv) {
     const title = {
       premajor: (v) => `Prepare v${semver.inc(v, 'major')}`,
       preminor: (v) => `Prepare v${semver.inc(v, 'minor')}`,
-      patch: (v) => `Release v${semver.inc(v, 'patch')}`,
+      patch: (v) => `Release v${v.prerelease.length ? semver.inc(v, 'patch') : v}`,
       prerelease: (v) => `Prerelease v${v}`,
     };
     const mutation = `mutation {
