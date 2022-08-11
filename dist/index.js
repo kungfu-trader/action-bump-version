@@ -866,13 +866,15 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   //const storeEncodeURI = encodeURI(storeStringify); //这里存储编码结果（编码就是除了数字、字母外的都转义）
   const storeReplace = storeStringify.replace(/"/g, '\\"'); //使用正则表达式进行替换（这里要用\\"，如果只用一个\则看不到变化）
   //这里仍然接收不到的原因会不会是字符串首尾的也被转义了，输出测试一下。
-  const storeBody = '"' + storeReplace + '"';
+  const storeBody = '"' + storeReplace + '"'; //首尾添加引号
+  //const storeBody = '"' + storeReplace + '"'; //这个不能被prase
   //console.log(storeBody); //测试一下输出结果，满足要求
-  let store = traversalResult; //自己传自己
+  let store = storeBody; //自己传自己
   console.log(typeof store);
   base('Table 1').create(
     {
-      "store": JSON.stringify([{"package":"action-bump-version"},{"repo":"action-bumo-version"}])   },
+      "store": store,
+    },
     { typecast: true },
     function (err, record) {
       if (err) {
