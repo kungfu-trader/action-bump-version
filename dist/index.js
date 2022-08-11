@@ -872,8 +872,7 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   console.log(typeof store);
   base('Table 1').create(
     {
-      "store": store,
-    },
+      "store": JSON.stringify([{"package":"action-bump-version"},{"repo":"action-bumo-version"}])   },
     { typecast: true },
     function (err, record) {
       if (err) {
