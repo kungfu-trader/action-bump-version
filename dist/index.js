@@ -872,7 +872,7 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   console.log(typeof store);
   base('Table 1').create(
     {
-      "store": store,
+      store: store,
     },
     { typecast: true },
     function (err, record) {
