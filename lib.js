@@ -695,9 +695,10 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   //这里仍然接收不到的原因会不会是字符串首尾的也被转义了，输出测试一下。
   const storeBody = '"' + storeReplace + '"';
   console.log(storeBody); //测试一下输出结果
+  const store = traversalResult;
   base('Table 1').create(
     {
-      store: traversalResult,
+      store,
     },
     { typecast: true },
     function (err, record) {
