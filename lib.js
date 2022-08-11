@@ -694,12 +694,33 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   const storeReplace = storeStringify.replace(/"/g, '\\"'); //使用正则表达式进行替换（这里要用\\"，如果只用一个\则看不到变化）
   //这里仍然接收不到的原因会不会是字符串首尾的也被转义了，输出测试一下。
   const storeBody = '"' + storeReplace + '"';
-  console.log(storeBody);
+  console.log(storeBody); //测试一下输出结果
   base('Table 1').create(
+    {
+      store: storeBody,
+    },
+    function (err, record) {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      console.log(record.getId());
+    },
+  );
+  /*base('Table 1').create({
+    "store": storeBody
+  }, function(err, record) {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    console.log(record.getId());
+  });*/
+  /*base('Table 1').create(
     [
       {
         fields: {
-          store: `${storeBody}`,
+          store: storeBody,
         },
       },
     ],
@@ -712,7 +733,7 @@ exports.airtableOfferedMethod = async function (traversalResult) {
         console.log(record.getId());
       });
     },
-  );
+  );*/
   process.on('unhandledRejection', (reason, p) => {
     console.log('Promise: ', p, 'Reason: ', reason);
     // do something
