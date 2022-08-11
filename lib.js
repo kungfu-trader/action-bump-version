@@ -693,12 +693,13 @@ exports.airtableOfferedMethod = async function (traversalResult) {
   //const storeEncodeURI = encodeURI(storeStringify); //这里存储编码结果（编码就是除了数字、字母外的都转义）
   const storeReplace = storeStringify.replace(/"/g, '\\"'); //使用正则表达式进行替换（这里要用\\"，如果只用一个\则看不到变化）
   //这里仍然接收不到的原因会不会是字符串首尾的也被转义了，输出测试一下。
+  const storeBody = '"' + storeReplace + '"';
   console.log(storeReplace);
   base('Table 1').create(
     [
       {
         fields: {
-          store: `${storeReplace}`,
+          store: storeBody,
         },
       },
     ],
