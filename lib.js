@@ -699,7 +699,7 @@ exports.airtableOfferedMethod = async function (traversalResult) {
     [
       {
         fields: {
-          store: storeBody,
+          store: `${storeBody}`,
         },
       },
     ],
