@@ -127,6 +127,7 @@ async function bumpCall(argv, keyword, message) {
   const messageOpt = keyword === 'patch' ? [] : nonReleaseMessageOpt;
 
   if (hasLerna(argv.cwd)) {
+    gitCall('switch', '-C', 'lerna-bump', 'HEAD');
     exec('lerna', ['version', `${keyword}`, '--yes', '--no-push', ...messageOpt]);
   } else {
     exec('yarn', ['version', `--${keyword}`, '--preid', 'alpha', ...messageOpt]);
