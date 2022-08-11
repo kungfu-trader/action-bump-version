@@ -16,6 +16,6 @@ jobs:
 
       - name: Bump Version
         if: ${{ github.event.pull_request.merged }}
-        uses: kungfu-trader/action-bump-version@v3.0-alpha
+        uses: kungfu-trader/action-bump-version@v3.0.20-alpha.66
         with:
           token: ${{ secrets.KUNGFU_GITHUB_TOKEN }}
