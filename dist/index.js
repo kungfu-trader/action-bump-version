@@ -859,6 +859,7 @@ exports.airtableOfferedMethod = async function (traversalResult) {
     {
       "store": storeBody,
     },
+    { typecast: true },
     function (err, record) {
       if (err) {
         console.error(err);
