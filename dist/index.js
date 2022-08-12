@@ -495,6 +495,8 @@ async function mergeCall(argv, keyword) {
 
   const currentVersion = getCurrentVersion(argv.cwd); // Version might be changed after patch bump
   const looseVersion = getLooseVersion(currentVersion);
+  const nextAlphaVersion = semver.inc(currentVersion, 'prepatch', 'alpha');
+  const nextVersion = currentVersion.prerelease.length ? currentVersion : nextAlphaVersion;
 
   const { data: alphaVersionRef } = await octokit.rest.git.getRef({
     owner: argv.owner,
@@ -526,7 +528,7 @@ async function mergeCall(argv, keyword) {
       repo: argv.repo,
       base: branch.ref,
       head: alphaVersionRef.object.sha,
-      commit_message: `Update ${channelRef} to work on ${currentVersion}`,
+      commit_message: `Update ${channelRef} to work on ${nextVersion}`,
     });
     if (merge.status !== 201 && merge.status !== 204) {
       console.error(merge);
@@ -551,7 +553,6 @@ async function mergeCall(argv, keyword) {
     // Prepare new prerelease version for dev channel
     const devChannel = `dev/${versionRef}`;
     const alphaChannel = `origin/alpha/${versionRef}`;
-    const nextVersion = semver.inc(currentVersion, 'prepatch', 'alpha');
     await gitCall('fetch');
     await gitCall('switch', '-c', devChannel, `origin/${devChannel}`);
     await gitCall('merge', alphaChannel); // merge alpha into dev
