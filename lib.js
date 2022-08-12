@@ -128,8 +128,9 @@ async function bumpCall(argv, keyword, message) {
 
   if (hasLerna(argv.cwd)) {
     if (keyword === 'patch' || keyword === 'prepatch') {
+      // lerna requires a valid branch to bump
       const lernaBumpBranch = `release/v${version.major}/lerna-bump-patch`;
-      gitCall('switch', '-C', lernaBumpBranch, 'HEAD');
+      await gitCall('switch', '-C', lernaBumpBranch, 'HEAD');
     }
     exec('lerna', ['version', `${keyword}`, '--yes', '--no-push', ...messageOpt]);
   } else {
@@ -388,10 +389,13 @@ async function mergeCall(argv, keyword) {
   if (keyword === 'patch') {
     // Prepare new prerelease version for dev channel
     const devChannel = `dev/${versionRef}`;
+    const alphaChannel = `origin/alpha/${versionRef}`;
+    const nextVersion = semver.inc(currentVersion, 'prepatch', 'alpha');
     await gitCall('fetch');
     await gitCall('switch', '-c', devChannel, `origin/${devChannel}`);
+    await gitCall('merge', alphaChannel); // merge alpha into dev
     await gitCall('tag', '-d', `v${currentVersion}`);
-    await bumpCall(argv, 'prepatch', `Update ${devChannel} to work on ${currentVersion}`);
+    await bumpCall(argv, 'prepatch', `Update ${devChannel} to work on ${nextVersion}`);
     await gitCall('push', 'origin', `HEAD:${devChannel}`);
     await gitCall('switch', argv.baseRef);
   }
