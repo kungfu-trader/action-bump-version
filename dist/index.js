@@ -556,9 +556,11 @@ async function mergeCall(argv, keyword) {
     await gitCall('fetch');
     await gitCall('switch', '-c', devChannel, `origin/${devChannel}`);
     await bumpCall(argv, 'patch', 'auto', false);
-    await gitCall('commit', '-a', '-m', `Update ${devChannel} to ${currentVersion}`);
-    await gitCall('merge', alphaChannel).catch(console.error); // merge alpha into dev
-    await gitCall('restore', '.'); // restore working directory
+    await gitCall('commit', '-a', '-m', `Update ${devChannel} to catch up alpha channel`);
+    await gitCall('merge', alphaChannel).catch((e) => {
+      console.error(e);
+    }); // merge alpha into dev
+    await gitCall('reset', '--hard'); // abandon failed merge
     await gitCall('update-ref', '-d', 'MERGE_HEAD'); // and clean up MERGE_HEAD
     await bumpCall(argv, 'prepatch', 'auto', false);
     await gitCall('commit', '-a', '-m', `Update ${devChannel} to work on ${nextVersion}`);
