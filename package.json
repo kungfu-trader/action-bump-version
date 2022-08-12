@@ -16,7 +16,7 @@
     "@actions/github": "^5.0.0",
     "git-client": "^1.8.3",
     "nodegit": "^0.27.0",
-    "semver": "^7.3.4",
+    "semver": "^7.3.7",
     "yargs": "^16.2.0"
   },
   "devDependencies": {
