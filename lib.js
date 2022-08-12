@@ -120,11 +120,12 @@ async function gitCall(...args) {
   console.log(output);
 }
 
-async function bumpCall(argv, keyword, message) {
+async function bumpCall(argv, keyword, message, tag = true) {
   const version = getCurrentVersion(argv.cwd);
   semver.inc(version, keyword, 'alpha'); // Get next version to make up message
   const nonReleaseMessageOpt = ['--message', message ? `"${message}"` : `"Move on to v${version}"`];
   const messageOpt = keyword === 'patch' ? [] : nonReleaseMessageOpt;
+  const tagOpt = tag ? [] : ['--no-git-tag-version'];
 
   if (hasLerna(argv.cwd)) {
     if (keyword === 'patch' || keyword === 'prepatch') {
@@ -132,9 +133,9 @@ async function bumpCall(argv, keyword, message) {
       const lernaBumpBranch = `release/v${version.major}/lerna-bump-patch`;
       await gitCall('switch', '-C', lernaBumpBranch, 'HEAD');
     }
-    exec('lerna', ['version', `${keyword}`, '--yes', '--no-push', ...messageOpt]);
+    exec('lerna', ['version', `${keyword}`, '--yes', '--no-push', ...messageOpt, ...tagOpt]);
   } else {
-    exec('yarn', ['version', `--${keyword}`, '--preid', 'alpha', ...messageOpt]);
+    exec('yarn', ['version', `--${keyword}`, '--preid', 'alpha', ...messageOpt, ...tagOpt]);
   }
 }
 
@@ -394,18 +395,18 @@ async function mergeCall(argv, keyword) {
     const alphaChannel = `origin/alpha/${versionRef}`;
     await gitCall('fetch');
     await gitCall('switch', '-c', devChannel, `origin/${devChannel}`);
-    await gitCall('tag', '-d', `v${currentVersion}`);
-    await bumpCall(argv, 'patch', `Update ${devChannel} to ${currentVersion}`);
+    await bumpCall(argv, 'patch', `Update ${devChannel} to ${currentVersion}`, false);
     await gitCall('merge', alphaChannel).catch(console.error); // merge alpha into dev
     await gitCall('restore', '.'); // restore working directory
     await gitCall('update-ref', '-d', 'MERGE_HEAD'); // and clean up MERGE_HEAD
-    await bumpCall(argv, 'prepatch', `Update ${devChannel} to work on ${nextVersion}`);
+    await bumpCall(argv, 'prepatch', `Update ${devChannel} to work on ${nextVersion}`, false);
     await gitCall('push', 'origin', `HEAD:${devChannel}`);
     await gitCall('switch', argv.baseRef);
   }
   await ensureBranchesProtection(argv).catch(console.error);
   await exports.resetDefaultBranch(argv);
 }
+
 exports.resetDefaultBranch = async function (argv) {
   const octokit = github.getOctokit(argv.token);
   const lastDevVersion = await octokit.graphql(`
