@@ -6,7 +6,6 @@ const path = require('path');
 const git = require('git-client');
 const semver = require('semver');
 const { spawnSync } = require('child_process');
-const { boolean } = require('yargs');
 
 const ProtectedBranchPatterns = ['main', 'release/*/*', 'alpha/*/*', 'dev/*/*'];
 
@@ -134,9 +133,11 @@ async function bumpCall(argv, keyword, message, tag = true) {
       await gitCall('switch', '-C', lernaBumpBranch, 'HEAD');
     }
     const forceOpt = keyword === 'prerelease' && !message ? ['--force-publish'] : [];
-    exec('lerna', ['version', `${keyword}`, '--yes', '--no-push', ...messageOpt, ...tagOpt, ...forceOpt]);
+    const lernaOpt = ['--yes', '--no-push', ...messageOpt, ...tagOpt, ...forceOpt];
+    exec('lerna', ['version', `${keyword}`, ...lernaOpt]);
   } else {
-    exec('yarn', ['version', `--${keyword}`, '--preid', 'alpha', ...messageOpt, ...tagOpt]);
+    const yarnOpt = ['--preid', 'alpha', ...messageOpt, ...tagOpt];
+    exec('yarn', ['version', `--${keyword}`, ...yarnOpt]);
   }
 }
 
