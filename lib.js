@@ -133,7 +133,8 @@ async function bumpCall(argv, keyword, message, tag = true) {
       const lernaBumpBranch = `release/v${version.major}/lerna-bump-patch`;
       await gitCall('switch', '-C', lernaBumpBranch, 'HEAD');
     }
-    exec('lerna', ['version', `${keyword}`, '--yes', '--no-push', ...messageOpt, ...tagOpt]);
+    const forceOpt = keyword === 'prerelease' && !message ? ['--force-publish'] : [];
+    exec('lerna', ['version', `${keyword}`, '--yes', '--no-push', ...messageOpt, ...tagOpt, ...forceOpt]);
   } else {
     exec('yarn', ['version', `--${keyword}`, '--preid', 'alpha', ...messageOpt, ...tagOpt]);
   }
