@@ -282,8 +282,8 @@ async function gitCall(...args) {
 
 async function bumpCall(argv, keyword, message, tag = true) {
   const version = getCurrentVersion(argv.cwd);
-  semver.inc(version, keyword, 'alpha'); // Get next version to make up message
-  const nonReleaseMessageOpt = ['--message', message ? `"${message}"` : `"Move on to v${version}"`];
+  const nextVersion = semver.inc(version, keyword, 'alpha'); // Get next version to make up message
+  const nonReleaseMessageOpt = ['--message', message ? `"${message}"` : `"Move on to v${nextVersion}"`];
   const messageOpt = keyword === 'patch' ? [] : nonReleaseMessageOpt;
   const tagOpt = tag ? [] : ['--no-git-tag-version'];
 
