@@ -122,8 +122,8 @@ async function gitCall(...args) {
 
 async function bumpCall(argv, keyword, message, tag = true) {
   const version = getCurrentVersion(argv.cwd);
-  semver.inc(version, keyword, 'alpha'); // Get next version to make up message
-  const nonReleaseMessageOpt = ['--message', message ? `"${message}"` : `"Move on to v${version}"`];
+  const nextVersion = semver.inc(version, keyword, 'alpha'); // Get next version to make up message
+  const nonReleaseMessageOpt = ['--message', message ? `"${message}"` : `"Move on to v${nextVersion}"`];
   const messageOpt = keyword === 'patch' ? [] : nonReleaseMessageOpt;
   const tagOpt = tag ? [] : ['--no-git-tag-version'];
 
@@ -133,7 +133,8 @@ async function bumpCall(argv, keyword, message, tag = true) {
       const lernaBumpBranch = `release/v${version.major}/lerna-bump-patch`;
       await gitCall('switch', '-C', lernaBumpBranch, 'HEAD');
     }
-    exec('lerna', ['version', `${keyword}`, '--yes', '--no-push', ...messageOpt, ...tagOpt]);
+    const forceOpt = keyword === 'prerelease' && !message ? ['--force-publish'] : [];
+    exec('lerna', ['version', `${keyword}`, '--yes', '--no-push', ...messageOpt, ...tagOpt, ...forceOpt]);
   } else {
     exec('yarn', ['version', `--${keyword}`, '--preid', 'alpha', ...messageOpt, ...tagOpt]);
   }
@@ -392,16 +393,8 @@ async function mergeCall(argv, keyword) {
   if (keyword === 'patch') {
     // Prepare new prerelease version for dev channel
     const devChannel = `dev/${versionRef}`;
-    const alphaChannel = `origin/alpha/${versionRef}`;
     await gitCall('fetch');
     await gitCall('switch', '-c', devChannel, `origin/${devChannel}`);
-    await bumpCall(argv, 'patch', 'auto', false);
-    await gitCall('commit', '-a', '-m', `Update ${devChannel} to catch up alpha channel`);
-    await gitCall('merge', alphaChannel).catch((e) => {
-      console.error(e);
-    }); // merge alpha into dev
-    await gitCall('reset', '--hard'); // abandon failed merge
-    await gitCall('update-ref', '-d', 'MERGE_HEAD'); // and clean up MERGE_HEAD
     await bumpCall(argv, 'prepatch', 'auto', false);
     await gitCall('commit', '-a', '-m', `Update ${devChannel} to work on ${nextVersion}`);
     await gitCall('push', 'origin', `HEAD:${devChannel}`);
