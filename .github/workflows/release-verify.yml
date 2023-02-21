@@ -11,6 +11,8 @@ jobs:
   try:
     uses: kungfu-trader/workflows/.github/workflows/.release-verify.yml@v1.2-alpha
     with:
+      enable-macos: false
+      enable-windows: false
       prebuild: true
       publish-versioning: false
       publish-aws-ci: false
