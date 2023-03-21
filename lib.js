@@ -220,6 +220,7 @@ async function ensureBranchesProtection(argv) {
   for (const pattern in ruleIds) {
     const id = ruleIds[pattern];
     const restrictsPushes = pattern.split('/')[0] !== 'dev';
+    const isRelease = pattern.split('/')[0] == 'release';
     const statusCheckContexts = '["verify"]';
     const mutation = `
       mutation {
@@ -230,6 +231,7 @@ async function ensureBranchesProtection(argv) {
           dismissesStaleReviews: true,
           restrictsReviewDismissals: true,
           requiresStatusChecks: true,
+          requiresCodeOwnerReviews: ${isRelease},
           requiredStatusCheckContexts: ${restrictsPushes ? statusCheckContexts : '[]'},
           requiresStrictStatusChecks: true,
           requiresConversationResolution: true,
@@ -265,6 +267,7 @@ async function suspendBranchesProtection(argv, branchPatterns = ProtectedBranchP
           dismissesStaleReviews: false,
           restrictsReviewDismissals: false,
           requiresStatusChecks: false,
+          requiresCodeOwnerReviews: false,
           requiresStrictStatusChecks: false,
           requiresConversationResolution: false,
           isAdminEnforced: true,
