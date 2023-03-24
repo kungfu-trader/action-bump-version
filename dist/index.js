@@ -18324,8 +18324,8 @@ const postbuild = async (argv) => {
 
 const tryClosePullRequest = async (error) => {
   const token = core.getInput('token');
-  const headRef = process.env.GITHUB_HEAD_REF || context.ref;
-  const baseRef = process.env.GITHUB_BASE_REF || context.ref;
+  const headRef = process.env.GITHUB_HEAD_REF || github.context.ref;
+  const baseRef = process.env.GITHUB_BASE_REF || github.context.ref;
   if (github.context.eventName === 'pull_request' && core.getInput('action') === 'verify') {
     const repo = github.context.repo;
     const octokit = github.getOctokit(token);
