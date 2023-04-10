@@ -408,7 +408,11 @@ async function mergeCall(argv, keyword) {
     await gitCall('switch', '-c', devChannel, `origin/${devChannel}`);
     await bumpCall(argv, 'prepatch', 'auto', false);
     await gitCall('commit', '-a', '-m', `Update ${devChannel} to work on ${nextVersion}`);
-    await gitCall('merge', '--no-ff', '-m', `merge ${alphaChannel} to ${devChannel}`, alphaChannel);
+    try {
+      await gitCall('merge', '--no-ff', '-m', `merge ${alphaChannel} to ${devChannel}`, alphaChannel);
+    } catch (e) {
+      console.log('not merge from alpha to dev');
+    }
     await gitCall('push', 'origin', `HEAD:${devChannel}`);
     await gitCall('switch', argv.baseRef);
   }
