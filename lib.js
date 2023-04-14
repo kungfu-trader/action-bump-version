@@ -406,6 +406,7 @@ async function mergeCall(argv, keyword) {
       await gitCall('merge', '--no-ff', alphaChannel, '-m', `merge ${alphaChannel} to ${devChannel}`);
       console.log('----- Merge from alpha to dev -----');
     } catch (e) {
+      console.log(e);
       console.log('-- Not merge from alpha to dev --');
     }
     await gitCall('push', 'origin', `HEAD:${devChannel}`);
