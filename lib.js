@@ -404,7 +404,7 @@ async function mergeCall(argv, keyword) {
     await bumpCall(argv, 'prepatch', 'auto', false);
     await gitCall('commit', '-a', '-m', `Update ${devChannel} to work on ${nextVersion}`);
     try {
-      await gitCall('fetch', origin, alphaChannel);
+      await gitCall('fetch', 'origin', alphaChannel);
       await gitCall('switch', devChannel);
       await gitCall('merge', '--no-ff', oriAlphaChannel, '-m', `merge ${oriAlphaChannel} to ${devChannel}`);
       console.log('----- Merge from alpha to dev -----');
