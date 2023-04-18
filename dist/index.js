@@ -404,13 +404,14 @@ async function mergeCall(argv, keyword) {
     // Prepare new prerelease version for dev channel
     const devChannel = `dev/${versionRef}`;
     const alphaChannel = `alpha/${versionRef}`;
+    const oriAlphaChannel = `origin/alpha/${versionRef}`;
     await gitCall('fetch');
     await gitCall('switch', '-c', devChannel, `origin/${devChannel}`);
     await bumpCall(argv, 'prepatch', 'auto', false);
     await gitCall('commit', '-a', '-m', `Update ${devChannel} to work on ${nextVersion}`);
     try {
       await gitCall('switch', devChannel);
-      await gitCall('merge', '--no-ff', alphaChannel, '-m', `merge ${alphaChannel} to ${devChannel}`);
+      await gitCall('merge', '--no-ff', oriAlphaChannel, '-m', `merge ${oriAlphaChannel} to ${devChannel}`);
       console.log('----- Merge from alpha to dev -----');
     } catch (e) {
       console.log(e);
