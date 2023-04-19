@@ -403,14 +403,16 @@ async function mergeCall(argv, keyword) {
     await gitCall('switch', '-c', devChannel, `origin/${devChannel}`);
     await bumpCall(argv, 'prepatch', 'auto', false);
     await gitCall('commit', '-a', '-m', `Update ${devChannel} to work on ${nextVersion}`);
+    await gitCall('fetch', 'origin', alphaChannel);
+    await gitCall('switch', devChannel);
     try {
-      await gitCall('fetch', origin, alphaChannel);
-      await gitCall('switch', devChannel);
       await gitCall('merge', '--no-ff', oriAlphaChannel, '-m', `merge ${oriAlphaChannel} to ${devChannel}`);
       console.log('----- Merge from alpha to dev -----');
     } catch (e) {
-      console.log(e);
       console.log('-- Not merge from alpha to dev --');
+      console.log(e);
+      await gitCall('merge', '--abort');
+      console.log('git merge abort');
     }
     await gitCall('push', 'origin', `HEAD:${devChannel}`);
     await gitCall('switch', argv.baseRef);
