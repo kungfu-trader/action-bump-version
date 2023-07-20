@@ -122,6 +122,7 @@ const main = async function () {
     action: core.getInput('action'),
     publish: core.getInput('no-publish') === 'false',
     protection: core.getInput('no-protection') === 'false',
+    protectDevBranches: core.getInput('protect-dev-branches') === 'true',
     headRef: headRef,
     baseRef: baseRef,
     keyword: lib.getBumpKeyword({ cwd: process.cwd(), headRef: headRef, baseRef: baseRef }),
