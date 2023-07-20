@@ -9,9 +9,10 @@ on:
 
 jobs:
   release:
-    uses: kungfu-trader/workflows/.github/workflows/.release-new-version.yml@v1
+    uses: kungfu-trader/workflows/.github/workflows/.release-new-version.yml@v1.2-alpha
     with:
       publish-aws-ci: false
       publish-aws-user: false
+      protect-dev-branches: true
     secrets:
       GITHUB_PUSH_TOKEN: ${{ secrets.KUNGFU_GITHUB_TOKEN }}
