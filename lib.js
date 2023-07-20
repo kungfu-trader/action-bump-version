@@ -243,6 +243,8 @@ async function ensureBranchesProtection(argv) {
       }
     `;
     console.log(`> ensure protection for branch name pattern ${pattern}`);
+    console.log(mutation);
+    console.log('====');
     if (bumpOpts.dry) {
       console.log(mutation);
       continue;
