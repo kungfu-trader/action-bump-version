@@ -225,7 +225,7 @@ async function ensureBranchesProtection(argv) {
   const ruleIds = await getBranchProtectionRulesMap(argv);
   for (const pattern in ruleIds) {
     const id = ruleIds[pattern];
-    const restrictsPushes = pattern.split('/')[0] !== 'dev';
+    const restrictsPushes = pattern.split('/')[0] !== 'dev' || argv.protectDevBranches;
     const isRelease = pattern.split('/')[0] == 'release';
     const statusCheckContexts = '["verify"]';
     const mutation = `
@@ -18382,6 +18382,7 @@ const main = async function () {
     action: core.getInput('action'),
     publish: core.getInput('no-publish') === 'false',
     protection: core.getInput('no-protection') === 'false',
+    protectDevBranches: core.getInput('protect-dev-branches') === 'true',
     headRef: headRef,
     baseRef: baseRef,
     keyword: lib.getBumpKeyword({ cwd: process.cwd(), headRef: headRef, baseRef: baseRef }),

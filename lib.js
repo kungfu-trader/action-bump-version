@@ -219,7 +219,7 @@ async function ensureBranchesProtection(argv) {
   const ruleIds = await getBranchProtectionRulesMap(argv);
   for (const pattern in ruleIds) {
     const id = ruleIds[pattern];
-    const restrictsPushes = pattern.split('/')[0] !== 'dev';
+    const restrictsPushes = pattern.split('/')[0] !== 'dev' || argv.protectDevBranches;
     const isRelease = pattern.split('/')[0] == 'release';
     const statusCheckContexts = '["verify"]';
     const mutation = `
