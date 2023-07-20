@@ -9,7 +9,7 @@ on:
 
 jobs:
   try:
-    uses: kungfu-trader/workflows/.github/workflows/.release-verify.yml@v1
+    uses: kungfu-trader/workflows/.github/workflows/.release-verify.yml@v1.2-alpha
     with:
       enable-macos: false
       enable-windows: false
@@ -17,6 +17,7 @@ jobs:
       publish-versioning: false
       publish-aws-ci: false
       publish-aws-user: false
+      protect-dev-branches: true
   
   verify:
     needs: try
