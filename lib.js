@@ -219,7 +219,8 @@ async function ensureBranchesProtection(argv) {
   const ruleIds = await getBranchProtectionRulesMap(argv);
   for (const pattern in ruleIds) {
     const id = ruleIds[pattern];
-    const restrictsPushes = pattern.split('/')[0] !== 'dev' || argv.protectDevBranches;
+    const notDev = pattern.split('/')[0] !== 'dev';
+    const restrictsPushes = notDev || argv.protectDevBranches;
     const isRelease = pattern.split('/')[0] == 'release';
     const statusCheckContexts = '["verify"]';
     const mutation = `
@@ -232,7 +233,7 @@ async function ensureBranchesProtection(argv) {
           restrictsReviewDismissals: true,
           requiresStatusChecks: true,
           requiresCodeOwnerReviews: ${isRelease},
-          requiredStatusCheckContexts: ${restrictsPushes ? statusCheckContexts : '[]'},
+          requiredStatusCheckContexts: ${notDev ? statusCheckContexts : '[]'},
           requiresStrictStatusChecks: true,
           requiresConversationResolution: true,
           isAdminEnforced: true,
