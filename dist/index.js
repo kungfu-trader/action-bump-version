@@ -406,21 +406,17 @@ async function mergeCall(argv, keyword) {
     const devChannel = `dev/${versionRef}`;
     const alphaChannel = `alpha/${versionRef}`;
     const oriAlphaChannel = `origin/alpha/${versionRef}`;
+    const lernaBumpBranch = `release/v${currentVersion.major}/lerna-bump-patch`;
     await gitCall('fetch');
     await gitCall('switch', '-c', devChannel, `origin/${devChannel}`);
     await bumpCall(argv, 'prepatch', 'auto', false);
     await gitCall('commit', '-a', '-m', `Update ${devChannel} to work on ${nextVersion}`);
     await gitCall('fetch', 'origin', alphaChannel);
-    await gitCall('switch', devChannel);
-    try {
-      await gitCall('merge', '--no-ff', oriAlphaChannel, '-m', `merge ${oriAlphaChannel} to ${devChannel}`);
-      console.log('----- Merge from alpha to dev -----');
-    } catch (e) {
-      console.log('-- Not merge from alpha to dev --');
-      console.log(e);
-      await gitCall('merge', '--abort');
-      console.log('git merge abort');
+    if (hasLerna(argv.cwd)) {
+      await gitCall('switch', devChannel);
+      await gitCall('merge', '--no-commit', lernaBumpBranch);
     }
+    await gitCall('merge', '--no-ff', oriAlphaChannel, '-m', `Merge ${oriAlphaChannel} into ${devChannel}`);
     await gitCall('push', 'origin', `HEAD:${devChannel}`);
     await gitCall('switch', argv.baseRef);
   }
