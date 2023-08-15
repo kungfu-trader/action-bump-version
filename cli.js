@@ -13,6 +13,7 @@ exports.argv = require('yargs/yargs')(process.argv.slice(2))
   .option('repo', { type: 'string', default: 'action-bump-version' })
   .option('protection', { type: boolean, default: true })
   .option('publish', { type: boolean, default: true })
+  .option('protect-dev-branches', { type: boolean, default: false })
   .option('dry', { type: boolean })
   .command(
     'bump <keyword>',
