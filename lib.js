@@ -491,30 +491,32 @@ exports.verify = async (argv) => {
     throw new Error(`No rule to bump for head/base refs: ${argv.headRef} -> ${argv.baseRef}`);
   }
   const octokit = github.getOctokit(argv.token);
-  // https://octokit.github.io/rest.js/v20#actions-list-workflow-runs
-  const queryWorkflowRuns = await octokit.rest.actions.listWorkflowRuns({
-    owner: argv.owner,
-    repo: argv.repo,
-    workflow_id: 'release-verify.yml',
-    branch: argv.headRef,
-    per_page: 1,
-  });
-  console.log(`found workflow runs: ${queryWorkflowRuns.data.total_count}`);
-  if (queryWorkflowRuns.status === 200) {
+  try {
+    // https://octokit.github.io/rest.js/v20#actions-list-workflow-runs
+    const queryWorkflowRuns = await octokit.rest.actions.listWorkflowRuns({
+      owner: argv.owner,
+      repo: argv.repo,
+      workflow_id: 'release-verify.yml',
+      branch: argv.headRef,
+      per_page: 1,
+    });
+    if (queryWorkflowRuns.status === 200) {
+      console.info(`> workflow release-verify total count: ${queryWorkflowRuns.data.total_count}`);
+    }
     const workflowRuns = queryWorkflowRuns.data.workflow_runs;
     for (const run of workflowRuns) {
       const commit = run.head_commit;
       if (run.status === 'completed') {
-        console.log(
-          `> cancel workflow run #${run.run_number} committed by ${commit.committer.name} with "${commit.message}"`,
-        );
-        try {
-          await octokit.rest.actions.cancelWorkflowRun({ owner: argv.owner, repo: argv.repo, run_id: run.id });
-        } catch (e) {
-          console.error(e);
-        }
+        continue;
       }
+      console.log(`> found workflow run #${run.run_number} with status [${run.status}]`);
+      console.log(
+        `> cancel workflow run #${run.run_number} committed by ${commit.committer.name} with "${commit.message}"`,
+      );
+      await octokit.rest.actions.cancelWorkflowRun({ owner: argv.owner, repo: argv.repo, run_id: run.id });
     }
+  } catch (e) {
+    console.error(e);
   }
   return keyword;
 };
