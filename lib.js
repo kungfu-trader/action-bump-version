@@ -498,7 +498,7 @@ exports.verify = async (argv) => {
       repo: argv.repo,
       workflow_id: 'release-verify.yml',
       branch: argv.headRef,
-      per_page: 1,
+      per_page: 5,
     });
     if (queryWorkflowRuns.status === 200) {
       console.info(`> workflow release-verify total count: ${queryWorkflowRuns.data.total_count}`);
@@ -506,10 +506,13 @@ exports.verify = async (argv) => {
     const workflowRuns = queryWorkflowRuns.data.workflow_runs;
     for (const run of workflowRuns) {
       const commit = run.head_commit;
+      if (run.head_sha === argv.commitId) {
+        continue;
+      }
+      console.log(`> found workflow run #${run.run_number} with status [${run.status}] for commit ${run.head_sha}`);
       if (run.status === 'completed') {
         continue;
       }
-      console.log(`> found workflow run #${run.run_number} with status [${run.status}]`);
       console.log(
         `> cancel workflow run #${run.run_number} committed by ${commit.committer.name} with "${commit.message}"`,
       );
