@@ -498,7 +498,6 @@ exports.verify = async (argv) => {
   }
   const octokit = github.getOctokit(argv.token);
   try {
-    console.log(`> workflow verify triggered by ${argv.commitId}`);
     // https://octokit.github.io/rest.js/v20#actions-list-workflow-runs
     const queryWorkflowRuns = await octokit.rest.actions.listWorkflowRuns({
       owner: argv.owner,
@@ -508,10 +507,11 @@ exports.verify = async (argv) => {
       per_page: 5,
     });
     if (queryWorkflowRuns.status === 200) {
+      console.log(`> workflow release-verify triggered by commit ${argv.commitId}`);
       console.info(`> workflow release-verify total count: ${queryWorkflowRuns.data.total_count}`);
     }
     const workflowRuns = queryWorkflowRuns.data.workflow_runs;
-    for (const run of workflowRuns) {
+    for (const run of workflowRuns.slice(1)) {
       const commit = run.head_commit;
       if (run.head_sha === argv.commitId) {
         continue;
