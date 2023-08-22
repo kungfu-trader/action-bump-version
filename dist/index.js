@@ -498,6 +498,7 @@ exports.verify = async (argv) => {
   }
   const octokit = github.getOctokit(argv.token);
   try {
+    console.log(`> workflow verify triggered by ${argv.commitId}`);
     // https://octokit.github.io/rest.js/v20#actions-list-workflow-runs
     const queryWorkflowRuns = await octokit.rest.actions.listWorkflowRuns({
       owner: argv.owner,
