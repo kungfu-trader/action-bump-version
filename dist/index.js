@@ -504,18 +504,21 @@ exports.verify = async (argv) => {
       repo: argv.repo,
       workflow_id: 'release-verify.yml',
       branch: argv.headRef,
-      per_page: 1,
+      per_page: 6,
     });
     if (queryWorkflowRuns.status === 200) {
-      console.info(`> workflow release-verify total count: ${queryWorkflowRuns.data.total_count}`);
+      console.log(`> workflow release-verify triggered by commit ${argv.commitId}`);
     }
     const workflowRuns = queryWorkflowRuns.data.workflow_runs;
-    for (const run of workflowRuns) {
+    for (const run of workflowRuns.slice(1)) {
       const commit = run.head_commit;
+      if (run.head_sha === argv.commitId) {
+        continue;
+      }
+      console.debug(`> found workflow run #${run.run_number} with status [${run.status}] for commit ${run.head_sha}`);
       if (run.status === 'completed') {
         continue;
       }
-      console.log(`> found workflow run #${run.run_number} with status [${run.status}]`);
       console.log(
         `> cancel workflow run #${run.run_number} committed by ${commit.committer.name} with "${commit.message}"`,
       );
@@ -18408,6 +18411,7 @@ const main = async function () {
     publish: core.getInput('no-publish') === 'false',
     protection: core.getInput('no-protection') === 'false',
     protectDevBranches: core.getInput('protect-dev-branches') === 'true',
+    commitId: context.sha,
     headRef: headRef,
     baseRef: baseRef,
     keyword: lib.getBumpKeyword({ cwd: process.cwd(), headRef: headRef, baseRef: baseRef }),
