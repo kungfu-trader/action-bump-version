@@ -123,6 +123,7 @@ const main = async function () {
     publish: core.getInput('no-publish') === 'false',
     protection: core.getInput('no-protection') === 'false',
     protectDevBranches: core.getInput('protect-dev-branches') === 'true',
+    commitId: context.sha,
     headRef: headRef,
     baseRef: baseRef,
     keyword: lib.getBumpKeyword({ cwd: process.cwd(), headRef: headRef, baseRef: baseRef }),
